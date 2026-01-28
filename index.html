@@ -1,0 +1,3148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日历小助手</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+        @font-face { font-family: '站酷仓耳渔阳体'; src: url('fonts/站酷仓耳渔阳体-W03.ttf'); }
+        @font-face { font-family: '霞鹜文楷'; src: url('fonts/LXGWWenKaiMono-Light.ttf'); }
+        @font-face { font-family: '得意黑'; src: url('fonts/SmileySans-Oblique.otf'); }
+        @font-face { font-family: '江城黑体'; src: url('fonts/江城黑体 300W.ttf'); }
+        @font-face { font-family: '阿里妈妈方圆体'; src: url('fonts/阿里妈妈方圆体.ttf'); }
+        @font-face { font-family: '阿里妈妈数黑体'; src: url('fonts/阿里妈妈数黑体.ttf'); }
+        @font-face { font-family: '寒蝉半圆体'; src: url('fonts/寒蝉半圆体.ttf'); }
+        @font-face { font-family: '鸿蒙黑体'; src: url('fonts/鸿蒙黑体.ttf'); }
+        @font-face { font-family: '花仿宋'; src: url('fonts/花仿宋.ttf'); }
+        @font-face { font-family: '荆南圆体'; src: url('fonts/荆南圆体.ttf'); }
+        @font-face { font-family: '乐米波波体'; src: url('fonts/乐米波波体.ttf'); }
+        @font-face { font-family: '思印宋'; src: url('fonts/思印宋.ttf'); }
+        @font-face { font-family: '香萃等粗宋'; src: url('fonts/香萃等粗宋.ttf'); }
+        @font-face { font-family: '朱雀仿宋'; src: url('fonts/朱雀仿宋.ttf'); }
+        @font-face { font-family: '天王星像素'; src: url('fonts/Uranus_Pixel_11Px.ttf'); }
+        @font-face { font-family: '思源黑体'; src: url('fonts/思源黑体.otf'); }
+
+        :root {
+            --cream: #F8F5F0;
+            --primary: #5D4E4A;
+            --primary-light: #7D6E6A;
+            --yellow: #E8D5B5;
+            --yellow-light: #FFF8F0;
+            --pink: #C49A9A;
+            --green: #8FA587;
+            --border: #E8E4DD;
+            --calendar-font: '鸿蒙黑体';
+            --cal-theme: #5D4E4A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--cream);
+            height: 100vh;
+            overflow: hidden;
+            color: var(--primary);
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 2px solid var(--primary);
+            padding: 0 30px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 20px;
+        }
+        .nav-center { display: flex; gap: 4px; }
+        .nav-tab {
+            padding: 6px 16px;
+            font-size: 13px;
+            border: 2px solid transparent;
+            background: transparent;
+            color: var(--primary);
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+        }
+        .nav-tab:hover { background: var(--yellow-light); }
+        .nav-tab.active { background: var(--yellow); border-color: var(--primary); }
+        .nav-btn {
+            padding: 8px 20px;
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .follow-hint {
+            position: relative;
+            font-size: 10px;
+            color: var(--primary-light);
+            cursor: pointer;
+            padding: 3px 6px;
+            opacity: 0.7;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .follow-hint:hover { opacity: 1; }
+        .qrcode-popup {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            z-index: 1000;
+        }
+        .qrcode-popup img {
+            width: 130px;
+            height: 130px;
+            border-radius: 5px;
+            display: block;
+        }
+        .follow-hint:hover .qrcode-popup { display: block; }
+
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 30px 60px 30px;
+            background: var(--cream);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 预览区尺寸控制 */
+        .size-controls {
+            position: absolute;
+            top: 12px;
+            left: 15px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            font-size: 12px;
+            z-index: 10;
+        }
+        .size-controls label {
+            color: var(--primary-light);
+            font-weight: 500;
+        }
+        .size-controls input[type="number"] {
+            width: 70px;
+            padding: 5px 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .size-controls input:focus { border-color: var(--primary); outline: none; }
+        .size-controls span { color: var(--primary-light); }
+
+        /* 右上角提示 */
+        .tips-container {
+            position: absolute;
+            top: 22px;
+            right: 30px;
+            font-size: 11px;
+            color: var(--primary-light);
+            opacity: 0.5;
+            transition: opacity 0.5s ease;
+            max-width: 220px;
+            text-align: right;
+            pointer-events: none;
+            z-index: 5;
+            line-height: 1.4;
+        }
+        .tips-container.fade-out { opacity: 0; }
+        .tips-container .tip-icon { margin-right: 4px; }
+        .size-controls select {
+            padding: 5px 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+        }
+        .size-slider {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            gap: 8px;
+            align-items: center;
+        }
+        .size-slider.show { display: flex; }
+        .size-history {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 12px;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            max-width: 350px;
+        }
+        .size-history:empty { display: none; }
+        .size-chip {
+            padding: 3px 8px;
+            background: var(--yellow);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .size-chip:hover { background: var(--primary); color: white; }
+        .size-chip .delete {
+            font-size: 8px;
+            opacity: 0.6;
+            margin-left: 2px;
+        }
+        .size-chip .delete:hover { opacity: 1; }
+        .size-slider input[type="range"] { flex: 1; accent-color: var(--primary); }
+        .size-slider span { font-size: 11px; color: var(--primary-light); min-width: 30px; }
+
+        /* 预览缩放控制 */
+        .zoom-controls {
+            position: absolute;
+            bottom: 12px;
+            left: 15px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            font-size: 11px;
+            z-index: 10;
+        }
+        .zoom-controls label { color: var(--primary-light); font-weight: 500; }
+        .zoom-controls input[type="range"] {
+            width: 100px;
+            accent-color: var(--primary);
+        }
+        .zoom-controls span { color: var(--primary); font-weight: 600; min-width: 36px; }
+
+        .mascot-watermark {
+            position: absolute;
+            bottom: -20px;
+            right: 30px;
+            width: 140px;
+            height: auto;
+            opacity: 0.1;
+            filter: grayscale(30%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .control-panel {
+            width: 480px;
+            background: white;
+            border-left: 2px solid var(--primary);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 14px;
+            align-content: start;
+            flex: 1;
+        }
+
+        .section {
+            padding: 12px;
+            background: linear-gradient(135deg, #FDFCFA 0%, #F8F5F0 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .section.full-width { grid-column: 1 / -1; }
+        .section.date-section {
+            grid-column: 1 / -1;
+            background: none;
+            border: none;
+            padding: 0 0 8px 0;
+            border-bottom: 1px dashed var(--border);
+            border-radius: 0;
+        }
+        .section-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--primary-light);
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-item { flex: 1; }
+        .form-label { font-size: 9px; color: var(--primary-light); margin-bottom: 3px; display: block; }
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 6px 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            background: white;
+            color: var(--primary);
+            outline: none;
+        }
+        select {
+            padding-right: 24px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235D4E4A' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+        select:focus, input:focus { border-color: var(--primary); }
+
+        /* 自定义字体下拉框 */
+        .custom-select-wrap {
+            position: relative;
+            width: 100%;
+        }
+        .custom-select-trigger {
+            width: 100%;
+            padding: 6px 8px;
+            padding-right: 28px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.2s;
+        }
+        .custom-select-trigger:hover { border-color: var(--primary-light); }
+        .custom-select-trigger.active { border-color: var(--primary); }
+        .custom-select-trigger svg {
+            position: absolute;
+            right: 8px;
+            color: var(--primary);
+            transition: transform 0.2s;
+        }
+        .custom-select-trigger.active svg { transform: rotate(180deg); }
+        .custom-select-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(93, 78, 74, 0.15);
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .custom-select-dropdown.show { display: block; }
+        .custom-select-option {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s;
+        }
+        .custom-select-option:first-child { border-radius: 6px 6px 0 0; }
+        .custom-select-option:last-child { border-radius: 0 0 6px 6px; }
+        .custom-select-option:hover { background: var(--yellow-light); }
+        .custom-select-option.selected { background: var(--yellow); font-weight: 600; }
+        .recommend-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            background: var(--pink);
+            color: white;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        .custom-select-dropdown::-webkit-scrollbar { width: 6px; }
+        .custom-select-dropdown::-webkit-scrollbar-track { background: var(--cream); border-radius: 3px; }
+        .custom-select-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+
+        .pill-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+        .custom-ratio-wrap {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: 4px;
+            padding-left: 8px;
+            border-left: 1px dashed var(--border);
+        }
+        .custom-ratio-wrap input[type="number"] {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        .ratio-slider {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 160px;
+            background: white;
+            padding: 6px 10px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            margin-top: 4px;
+            gap: 6px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .ratio-slider.show { display: flex; }
+        .ratio-slider input[type="range"] { flex: 1; min-width: 0; width: 80px; accent-color: var(--primary); }
+        .ratio-slider span { font-size: 10px; color: var(--primary-light); flex-shrink: 0; }
+        .pill-btn {
+            padding: 5px 10px;
+            font-size: 11px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .pill-btn:hover { border-color: var(--primary); background: var(--yellow-light); }
+        .pill-btn.active { background: var(--yellow); border-color: var(--primary); }
+        .pill-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .btn-grid { display: grid; gap: 5px; }
+        .btn-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .btn-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-btn {
+            padding: 7px;
+            font-size: 11px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .grid-btn:hover { border-color: var(--primary); background: var(--yellow-light); }
+        .grid-btn.active { background: var(--yellow); border-color: var(--primary); }
+
+        .color-row { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+        .color-btn {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--yellow); }
+        .color-picker-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 4px;
+            padding-left: 8px;
+            border-left: 1px dashed var(--border);
+        }
+        .color-picker-wrap input[type="color"] {
+            width: 24px; height: 24px;
+            border: 2px dashed var(--primary-light);
+            border-radius: 50%;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+        .color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+        .color-picker-wrap input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: none; }
+        .color-picker-label {
+            font-size: 8px;
+            color: var(--primary-light);
+            writing-mode: vertical-rl;
+            letter-spacing: 1px;
+        }
+        .saved-colors {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .saved-colors:empty { display: none; }
+        .saved-colors:empty + .saved-colors-hint { display: none; }
+        .saved-colors-hint {
+            font-size: 9px;
+            color: var(--primary-light);
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+        .saved-color {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            transition: transform 0.15s;
+        }
+        .saved-color:hover { transform: scale(1.1); }
+        .saved-color.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--yellow); }
+        .saved-color.deleting::after {
+            content: '×';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background: var(--yellow-light);
+        }
+        .upload-box:hover { border-color: var(--primary); }
+        .upload-box.has-image { border-style: solid; border-color: var(--primary); padding: 6px; background: white; }
+        .upload-box input { display: none; }
+        .upload-box .icon { font-size: 24px; }
+        .upload-box .text { font-size: 10px; color: var(--primary-light); margin-top: 4px; }
+        .upload-box img { max-width: 100%; max-height: 40px; border-radius: 4px; }
+        .upload-actions { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
+        .bg-opacity-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+
+        /* 设置保存区域 */
+        .settings-save-section { margin-top: auto; }
+        .settings-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .settings-row select {
+            flex: 1;
+        }
+        .settings-select-wrap {
+            flex: 1;
+        }
+        .settings-select-wrap .custom-select-dropdown {
+            max-height: 180px;
+        }
+        .settings-placeholder {
+            color: var(--primary-light);
+            font-style: italic;
+        }
+        .settings-btn {
+            padding: 6px 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .settings-tip {
+            margin-top: 8px;
+            font-size: 10px;
+            color: var(--pink);
+            background: var(--yellow-light);
+            padding: 6px 10px;
+            border-radius: 6px;
+            line-height: 1.4;
+        }
+        .settings-btn:hover { border-color: var(--primary); background: var(--yellow-light); }
+        .settings-btn.delete:hover { background: #FEE2E2; border-color: #B91C1C; }
+
+        /* 保存设置对话框 */
+        .save-dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .save-dialog-overlay.show { display: flex; }
+        .save-dialog {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            min-width: 300px;
+        }
+        .save-dialog h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        .save-dialog input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .save-dialog input:focus { border-color: var(--primary); outline: none; }
+        .save-dialog-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .save-dialog-btns button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+        }
+        .save-dialog-btns .cancel { background: white; color: var(--primary); }
+        .save-dialog-btns .confirm { background: var(--primary); color: white; }
+        .upload-actions button {
+            padding: 3px 10px; font-size: 9px; border: 2px solid var(--primary);
+            border-radius: 50px; cursor: pointer; font-weight: 600;
+        }
+        .upload-actions .change-btn { background: white; color: var(--primary); }
+        .upload-actions .delete-btn { background: #FEE2E2; color: #B91C1C; border-color: #B91C1C; }
+
+
+        /* 画布容器 */
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* 画布预览区域限制 */
+        .canvas-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
+            max-height: 100%;
+            overflow: visible;
+            z-index: 1;
+        }
+
+        .resize-handle {
+            position: absolute;
+            background: var(--yellow);
+            border: 2px solid var(--primary);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .canvas-container:hover .resize-handle { opacity: 1; }
+        .resize-handle.corner { width: 10px; height: 10px; border-radius: 50%; }
+        .resize-handle.edge { background: var(--primary); border-radius: 2px; }
+        .resize-handle.right { right: -5px; top: 50%; transform: translateY(-50%); width: 5px; height: 36px; cursor: e-resize; }
+        .resize-handle.bottom { bottom: -5px; left: 50%; transform: translateX(-50%); width: 36px; height: 5px; cursor: s-resize; }
+        .resize-handle.bottom-right { bottom: -5px; right: -5px; cursor: se-resize; }
+
+        .resize-hint {
+            position: absolute;
+            bottom: -22px;
+            right: 0;
+            font-size: 10px;
+            color: var(--primary-light);
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+        .canvas-container:hover .resize-hint { opacity: 0.7; }
+
+        .resize-tooltip {
+            position: fixed;
+            background: var(--primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            white-space: nowrap;
+        }
+        .resize-tooltip.show { display: block; }
+
+        /* 日历卡片 */
+        .calendar-card {
+            background: white;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+            border: 2px solid var(--cal-theme);
+        }
+
+        .calendar-card.horizontal { flex-direction: row; }
+        .calendar-card.horizontal .image-section { width: 35%; flex-shrink: 0; }
+        .calendar-card.horizontal .calendar-section { width: 65%; flex-shrink: 0; }
+        .calendar-card.horizontal[data-pos="left"] { flex-direction: row; }
+        .calendar-card.horizontal[data-pos="right"] { flex-direction: row-reverse; }
+
+        .calendar-card.vertical { flex-direction: column; }
+        .calendar-card.vertical .image-section { height: 35%; flex-shrink: 0; }
+        .calendar-card.vertical .calendar-section { flex: 1; }
+        .calendar-card.vertical[data-pos="top"] { flex-direction: column; }
+        .calendar-card.vertical[data-pos="bottom"] { flex-direction: column-reverse; }
+
+        .calendar-card[data-pos="none"] .image-section { display: none; }
+        .calendar-card[data-pos="none"] .calendar-section { flex: 1; height: 100%; }
+
+        .bg-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            overflow: hidden;
+            opacity: var(--bg-opacity, 0.3);
+            pointer-events: none;
+        }
+        .bg-layer img {
+            position: absolute;
+            top: 50%; left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+        }
+        .bg-layer .bg-hint {
+            position: absolute;
+            bottom: calc(8px * var(--cal-scale, 1));
+            right: calc(8px * var(--cal-scale, 1));
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: calc(4px * var(--cal-scale, 1)) calc(10px * var(--cal-scale, 1));
+            border-radius: calc(20px * var(--cal-scale, 1));
+            font-size: calc(10px * var(--cal-scale, 1));
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        .calendar-card.has-bg:hover .bg-hint { opacity: 0.9; }
+
+        .image-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: var(--yellow-light);
+            cursor: move;
+        }
+        .image-section.has-bg { background: transparent; }
+        .image-section.drag-over { outline: 3px dashed var(--primary); outline-offset: -4px; }
+        .image-section.dragging { cursor: grabbing; }
+        .image-section img {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: auto;
+            height: auto;
+            max-width: none;
+            max-height: none;
+            pointer-events: none;
+            user-select: none;
+            transform-origin: center center;
+        }
+        .image-section .placeholder {
+            color: var(--primary-light);
+            font-size: calc(12px * var(--cal-scale, 1));
+            text-align: center;
+            padding: calc(12px * var(--cal-scale, 1));
+            cursor: pointer;
+        }
+        .image-section .placeholder .icon { font-size: calc(32px * var(--cal-scale, 1)); margin-bottom: calc(6px * var(--cal-scale, 1)); opacity: 0.5; }
+        .image-section .placeholder .sub { font-size: calc(10px * var(--cal-scale, 1)); margin-top: calc(4px * var(--cal-scale, 1)); opacity: 0.6; }
+
+        .image-hint {
+            position: absolute;
+            bottom: calc(8px * var(--cal-scale, 1));
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: calc(4px * var(--cal-scale, 1)) calc(10px * var(--cal-scale, 1));
+            border-radius: calc(20px * var(--cal-scale, 1));
+            font-size: calc(10px * var(--cal-scale, 1));
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .image-section:hover .image-hint { opacity: 0.9; }
+
+        .calendar-section {
+            position: relative;
+            z-index: 1;
+            padding: calc(14px * var(--cal-scale, 1)) calc(12px * var(--cal-scale, 1)) calc(10px * var(--cal-scale, 1));
+            font-family: var(--calendar-font), sans-serif;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .calendar-card.has-bg .calendar-section { background: rgba(255,255,255,0.85); }
+        .calendar-card.has-bg .image-section { background: transparent; }
+
+        .calendar-header { text-align: center; margin-bottom: calc(24px * var(--cal-scale, 1)); padding-top: calc(12px * var(--cal-scale, 1)); }
+        .calendar-section.has-divider .month-grid,
+        .calendar-section.has-divider .week-grid {
+            position: relative;
+            padding-top: calc(12px * var(--cal-scale, 1));
+        }
+        .calendar-section.has-divider .month-grid::before,
+        .calendar-section.has-divider .week-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--divider-thickness, 1px);
+            background: color-mix(in srgb, var(--cal-theme) 25%, transparent);
+        }
+        .calendar-header .year-month {
+            font-family: var(--calendar-font), sans-serif;
+            font-size: calc(26px * var(--cal-scale, 1));
+            color: var(--cal-theme);
+            font-weight: 700;
+        }
+        .calendar-header .lunar-month {
+            display: none;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            flex: 1;
+        }
+        .weekday-header {
+            text-align: center;
+            font-size: calc(9px * var(--cal-scale, 1));
+            font-weight: 600;
+            color: var(--cal-theme);
+            opacity: 0.6;
+            padding: calc(3px * var(--cal-scale, 1)) 0;
+        }
+        .weekday-header.weekend { color: var(--pink); opacity: 1; }
+
+        .day-cell {
+            text-align: center;
+            padding: 2px 1px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+        }
+        .day-cell.other-month { opacity: 0.15; }
+        .day-cell.weekend { color: var(--pink); }
+        .day-cell .solar { font-size: calc(12px * var(--cal-scale, 1)); font-weight: 600; color: var(--cal-theme); }
+        .day-cell .lunar { font-size: calc(7px * var(--cal-scale, 1)); color: var(--cal-theme); opacity: 0.5; margin-top: calc(1px * var(--cal-scale, 1)); }
+        .day-cell .lunar.festival { color: var(--pink) !important; font-weight: 600; }
+        .day-cell .lunar.jieqi { color: var(--green) !important; }
+
+        .solar-only .day-cell .lunar { display: none; }
+        .solar-only .calendar-header .lunar-month { display: none; }
+
+        .note-style .month-grid { gap: 0; }
+        .note-style .weekday-header { border-bottom: 1px solid var(--border); padding: 3px 0; }
+        .note-style .day-cell {
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 0;
+            align-items: flex-start;
+            justify-content: flex-start;
+            position: relative;
+            aspect-ratio: 1;
+        }
+        .note-style .day-cell .solar {
+            position: absolute;
+            top: calc(2px * var(--cal-scale, 1));
+            left: calc(3px * var(--cal-scale, 1));
+            font-size: calc(10px * var(--cal-scale, 1));
+        }
+        .note-style .day-cell .lunar { display: none; }
+        .note-style .day-cell .note-input {
+            position: absolute;
+            bottom: 1px;
+            left: 1px;
+            right: 1px;
+            font-size: 6px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            color: var(--cal-theme);
+            opacity: 0.7;
+            outline: none;
+            padding: 0;
+        }
+        .note-style .calendar-header .lunar-month { display: none; }
+
+        .card-footer {
+            text-align: center;
+            padding-top: calc(5px * var(--cal-scale, 1));
+            font-size: calc(7px * var(--cal-scale, 1));
+            color: var(--cal-theme);
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .week-grid { display: flex; flex-direction: column; gap: calc(4px * var(--cal-scale, 1)); flex: 1; }
+        .calendar-section:has(.week-grid) .calendar-header { margin-bottom: calc(20px * var(--cal-scale, 1)); }
+        .week-day-row {
+            display: flex;
+            align-items: center;
+            padding: calc(6px * var(--cal-scale, 1)) calc(10px * var(--cal-scale, 1));
+            background: color-mix(in srgb, var(--cal-theme) 8%, white);
+            gap: 6px;
+            border-radius: calc(6px * var(--cal-scale, 1));
+            flex: 1;
+        }
+        .week-day-row.weekend { background: #FFF0F3; }
+        .week-day-name { font-size: calc(11px * var(--cal-scale, 1)); font-weight: 600; width: calc(28px * var(--cal-scale, 1)); color: var(--cal-theme); }
+        .week-solar { font-size: calc(14px * var(--cal-scale, 1)); font-weight: 700; width: calc(22px * var(--cal-scale, 1)); color: var(--cal-theme); }
+        .week-lunar { font-size: calc(10px * var(--cal-scale, 1)); color: var(--cal-theme); opacity: 0.6; flex: 1; }
+
+        /* 平板适配 */
+        @media (max-width: 1000px) {
+            .main-layout { flex-direction: column-reverse; height: auto; overflow: auto; }
+            .control-panel { width: 100%; border-left: none; border-top: 2px solid var(--primary); max-height: 50vh; overflow-y: auto; }
+            .preview-area { min-height: 350px; }
+            body { overflow: auto; }
+        }
+
+        /* 手机适配 */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 12px;
+                height: 50px;
+                flex-wrap: wrap;
+            }
+            .nav-brand { font-size: 16px; }
+            .nav-tab { padding: 4px 10px; font-size: 11px; }
+            .nav-btn { padding: 6px 12px; font-size: 11px; }
+            .navbar > div:last-child {
+                gap: 6px !important;
+            }
+            .navbar select { font-size: 11px; padding: 4px 8px; min-width: 60px !important; }
+
+            .main-layout { flex-direction: column-reverse; }
+            .control-panel {
+                width: 100%;
+                padding: 12px;
+                max-height: 55vh;
+            }
+            .panel-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .section { padding: 10px; }
+            .section-title { font-size: 11px; }
+
+            .preview-area {
+                padding: 50px 15px 60px 15px;
+                min-height: 300px;
+            }
+            .size-controls {
+                top: 8px;
+                left: 8px;
+                padding: 6px 10px;
+                font-size: 11px;
+                flex-wrap: wrap;
+                max-width: calc(100% - 16px);
+            }
+            .size-controls input[type="number"] { width: 55px; }
+            .zoom-controls {
+                bottom: 8px;
+                left: 8px;
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+            .zoom-controls input[type="range"] { width: 80px; }
+            .tips-container {
+                top: 8px;
+                right: 12px;
+                font-size: 10px;
+                max-width: 140px;
+            }
+
+            .pill-btn { padding: 4px 8px; font-size: 10px; }
+            .grid-btn { padding: 5px; font-size: 10px; }
+            .color-btn { width: 20px; height: 20px; }
+
+            .upload-box { padding: 10px; }
+            .upload-box .icon { font-size: 20px; }
+            .upload-box .text { font-size: 11px; }
+
+            .custom-select-trigger { padding: 5px 8px; font-size: 11px; }
+            .custom-select-option { padding: 10px 12px; font-size: 12px; }
+            .custom-select-dropdown { max-height: 200px; }
+
+            .save-dialog { width: 90%; min-width: auto; padding: 16px; }
+            .save-dialog h3 { font-size: 14px; }
+
+            .settings-row { flex-wrap: wrap; gap: 6px; }
+            .settings-row select { flex: 1; min-width: 120px; }
+            .settings-btn { padding: 5px 8px; font-size: 12px; }
+            .settings-tip { font-size: 9px; }
+        }
+
+        /* 小屏手机适配 */
+        @media (max-width: 480px) {
+            .navbar {
+                height: auto;
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            .nav-brand {
+                width: 100%;
+                text-align: center;
+                font-size: 14px;
+            }
+            .nav-center {
+                order: 1;
+                flex: 1;
+            }
+            .navbar > div:last-child {
+                order: 2;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .panel-grid { gap: 8px; }
+            .section { padding: 8px; }
+
+            .form-row { flex-direction: column; gap: 6px; }
+            .form-item { width: 100%; }
+
+            .pill-group { gap: 4px; }
+            .btn-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+
+            .color-row { gap: 4px; }
+            .color-picker-wrap { margin-left: 2px; padding-left: 6px; }
+
+            .size-controls {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 0 0 10px 0;
+                width: 100%;
+                border-radius: 8px;
+            }
+            .preview-area {
+                padding: 15px 10px 50px 10px;
+                flex-direction: column;
+            }
+            .zoom-controls {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                margin-top: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+            .tips-container {
+                position: relative;
+                top: auto;
+                right: auto;
+                text-align: center;
+                max-width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .pill-btn, .grid-btn, .color-btn, .nav-tab, .nav-btn, .settings-btn {
+                min-height: 36px;
+                min-width: 36px;
+            }
+            .custom-select-option {
+                padding: 12px 14px;
+                min-height: 44px;
+            }
+            .image-hint, .bg-hint {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Calendar Studio</div>
+        <div class="nav-center">
+            <button class="nav-tab active" data-type="month" onclick="changeType(this)">月历</button>
+            <button class="nav-tab" data-type="week" onclick="changeType(this)">周历</button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;">
+            <div class="follow-hint">
+                <span>@阿真Irene</span>
+                <div class="qrcode-popup">
+                    <img src="qrcode.jpg" alt="二维码">
+                </div>
+            </div>
+            <select id="exportFormat" style="padding:6px 24px 6px 12px;border:2px solid var(--border);border-radius:6px;font-size:12px;min-width:80px;" title="导出格式">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPG</option>
+                <option value="svg">SVG</option>
+            </select>
+            <select id="exportScale" style="padding:6px 12px;border:2px solid var(--border);border-radius:6px;font-size:12px;min-width:100px;" title="导出倍率">
+                <option value="1">1x 原图</option>
+                <option value="2">2x 屏幕</option>
+                <option value="3" selected>3x 高清</option>
+                <option value="4">4x 印刷</option>
+                <option value="6">6x 大幅</option>
+                <option value="8">8x 超清</option>
+            </select>
+            <button class="nav-btn" onclick="exportImage()">导出图片</button>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        <div class="preview-area">
+            <div class="tips-container" id="tipsContainer">
+                <span class="tip-icon">💡</span><span id="tipText">内容超出别担心，调整字体大小即可</span>
+            </div>
+            <div class="size-controls">
+                <label>画布</label>
+                <select id="sizePreset" onchange="applyPreset()" style="padding:5px 8px;font-size:11px;">
+                    <option value="">预设尺寸</option>
+                </select>
+                <input type="number" id="widthInput" value="390" min="100" max="3000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('width')" onblur="hideSlider('width')">
+                <span>×</span>
+                <input type="number" id="heightInput" value="520" min="100" max="2000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('height')" onblur="hideSlider('height')">
+                <select id="sizeUnit" onchange="changeSizeUnit()">
+                    <option value="px">px</option>
+                    <option value="cm">cm</option>
+                </select>
+                <button onclick="resetToDefault()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:14px;cursor:pointer;color:var(--primary);" title="恢复默认设置">↺</button>
+                <button onclick="saveCurrentSize()" style="padding:4px 10px;border:2px solid var(--border);border-radius:6px;background:var(--yellow-light);font-size:11px;cursor:pointer;color:var(--primary);" title="保存当前尺寸">💾</button>
+                <span style="border-left:1px solid var(--border);height:20px;margin:0 4px;"></span>
+                <button id="undoBtn" onclick="undo()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:12px;cursor:pointer;color:var(--primary);opacity:0.4;" title="撤回上一步" disabled>←</button>
+                <button id="redoBtn" onclick="redo()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:12px;cursor:pointer;color:var(--primary);opacity:0.4;" title="重做下一步" disabled>→</button>
+                <div class="size-history" id="sizeHistory"></div>
+                <div class="size-slider" id="widthSliderWrap">
+                    <span>宽</span>
+                    <input type="range" id="widthSlider" min="200" max="1500" value="390" step="10" oninput="updateFromSlider('width')">
+                </div>
+                <div class="size-slider" id="heightSliderWrap">
+                    <span>高</span>
+                    <input type="range" id="heightSlider" min="200" max="1500" value="520" step="10" oninput="updateFromSlider('height')">
+                </div>
+            </div>
+
+            <div class="zoom-controls">
+                <label>显示</label>
+                <input type="range" id="previewZoom" min="10" max="200" value="100" oninput="updatePreviewZoom()">
+                <span id="zoomValue">100%</span>
+            </div>
+
+            <img src="mascot.png" class="mascot-watermark" alt="">
+
+            <div class="canvas-wrapper">
+                <div class="canvas-container" id="canvasContainer">
+                    <div class="calendar-card vertical" id="calendarCard" data-pos="bottom">
+                        <div class="bg-layer" id="bgLayer"></div>
+                        <div class="image-section" id="imageSection">
+                            <div class="placeholder">
+                                <div class="icon">🖼️</div>
+                                <div>点击上传图片</div>
+                                <div class="sub">拖拽移动 · 滚轮缩放</div>
+                            </div>
+                        </div>
+                        <div class="calendar-section" id="calendarSection">
+                            <div class="calendar-header">
+                                <div class="year-month" id="yearMonthDisplay"></div>
+                                <div class="lunar-month" id="lunarMonthDisplay"></div>
+                            </div>
+                            <div id="calendarGrid"></div>
+                            <div class="card-footer" id="cardFooter">日历小助手</div>
+                        </div>
+                    </div>
+                    <div class="resize-handle edge right" data-dir="e"></div>
+                    <div class="resize-handle edge bottom" data-dir="s"></div>
+                    <div class="resize-handle corner bottom-right" data-dir="se"></div>
+                    <div class="resize-hint">↘ 拖拽边缘自由调整大小</div>
+                </div>
+            </div>
+            <div class="resize-tooltip" id="resizeTooltip"></div>
+        </div>
+
+        <!-- 保存设置对话框 -->
+        <div class="save-dialog-overlay" id="saveDialogOverlay" onclick="closeSaveDialog(event)">
+            <div class="save-dialog" onclick="event.stopPropagation()">
+                <h3>保存当前设置</h3>
+                <input type="text" id="settingsName" placeholder="输入设置名称，如：小红书竖版" maxlength="20">
+                <div class="save-dialog-btns">
+                    <button class="cancel" onclick="closeSaveDialog()">取消</button>
+                    <button class="confirm" onclick="confirmSaveSettings()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="panel-grid">
+                <div class="section date-section">
+                    <div class="section-title">✦ 日期</div>
+                    <div style="display:flex;gap:8px;align-items:flex-end;">
+                        <div class="form-item" style="flex:1;">
+                            <input type="number" id="year" min="1900" max="2100" onchange="updateCalendar()">
+                        </div>
+                        <div class="form-item" style="flex:1;">
+                            <select id="month" onchange="updateCalendar()"></select>
+                        </div>
+                        <div class="form-item" id="weekSelector" style="display:none;flex:1.5;">
+                            <select id="weekNumber" onchange="updateCalendar()"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section full-width">
+                    <div class="section-title">✦ 比例</div>
+                    <div class="pill-group">
+                                                <button class="pill-btn" data-ratio="16:9" data-orient="horizontal" onclick="changeRatio(this)">16:9</button>
+                        <button class="pill-btn" data-ratio="4:3" data-orient="horizontal" onclick="changeRatio(this)">4:3</button>
+                        <button class="pill-btn" data-ratio="3:2" data-orient="horizontal" onclick="changeRatio(this)">3:2</button>
+                        <button class="pill-btn" data-ratio="1:1" data-orient="vertical" onclick="changeRatio(this)">1:1</button>
+                        <button class="pill-btn active" data-ratio="3:4" data-orient="vertical" onclick="changeRatio(this)">3:4</button>
+                        <button class="pill-btn" data-ratio="2:3" data-orient="vertical" onclick="changeRatio(this)">2:3</button>
+                        <button class="pill-btn" data-ratio="1:2" data-orient="vertical" onclick="changeRatio(this)">1:2</button>
+                        <button class="pill-btn" data-ratio="9:16" data-orient="vertical" onclick="changeRatio(this)">9:16</button>
+                        <span class="custom-ratio-wrap" style="position:relative;">
+                            <input type="number" id="customRatioW" min="1" max="20" value="1" style="width:48px;padding:5px;text-align:center;font-size:11px;" onfocus="showRatioSlider('w')" onblur="hideRatioSlider('w')" oninput="updateRatioFromInput()">
+                            <span style="font-size:11px;">:</span>
+                            <input type="number" id="customRatioH" min="1" max="20" value="1" style="width:48px;padding:5px;text-align:center;font-size:11px;" onfocus="showRatioSlider('h')" onblur="hideRatioSlider('h')" oninput="updateRatioFromInput()">
+                            <button class="pill-btn" onclick="applyCustomRatio()" style="padding:5px 10px;white-space:nowrap;">应用</button>
+                            <div class="ratio-slider" id="ratioWSliderWrap">
+                                <span>宽</span>
+                                <input type="range" id="ratioWSlider" min="1" max="20" value="1" step="1" oninput="updateRatioFromSlider('w')">
+                                <span id="ratioWValue">1</span>
+                            </div>
+                            <div class="ratio-slider" id="ratioHSliderWrap">
+                                <span>高</span>
+                                <input type="range" id="ratioHSlider" min="1" max="20" value="1" step="1" oninput="updateRatioFromSlider('h')">
+                                <span id="ratioHValue">1</span>
+                            </div>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 图片位置</div>
+                    <div class="pill-group" id="positionGroup">
+                        <button class="pill-btn" data-pos="left" onclick="changePosition(this)" disabled>图左</button>
+                        <button class="pill-btn" data-pos="right" onclick="changePosition(this)" disabled>图右</button>
+                        <button class="pill-btn" data-pos="top" onclick="changePosition(this)">图上</button>
+                        <button class="pill-btn active" data-pos="bottom" onclick="changePosition(this)">图下</button>
+                        <button class="pill-btn" data-pos="none" onclick="changePosition(this)">无图</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 日历样式</div>
+                    <div class="btn-grid cols-3">
+                        <button class="grid-btn active" data-style="full" onclick="changeStyle(this)">完整</button>
+                        <button class="grid-btn" data-style="solar" onclick="changeStyle(this)">公历</button>
+                        <button class="grid-btn" data-style="note" onclick="changeStyle(this)">填写</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
+                            <input type="checkbox" id="dividerToggle" onchange="toggleDivider()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
+                            分隔线
+                        </label>
+                        <div id="dividerThicknessWrap" style="display:none;align-items:center;gap:4px;">
+                            <input type="range" id="dividerThickness" min="1" max="4" value="1" step="0.5" style="width:50px;accent-color:var(--primary);" oninput="updateDividerThickness()">
+                            <span id="dividerThicknessValue" style="font-size:9px;color:var(--primary-light);min-width:24px;">1px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 主题色</div>
+                    <div class="color-row">
+                        <div class="color-btn" style="background:#4A4A4A" data-color="#4A4A4A" onclick="changeTheme(this)" title="深灰"></div>
+                        <div class="color-btn active" style="background:#5D4E4A" data-color="#5D4E4A" onclick="changeTheme(this)" title="暖棕"></div>
+                        <div class="color-btn" style="background:#7D8B8A" data-color="#7D8B8A" onclick="changeTheme(this)" title="青灰"></div>
+                        <div class="color-btn" style="background:#9B8AA5" data-color="#9B8AA5" onclick="changeTheme(this)" title="灰紫"></div>
+                        <div class="color-btn" style="background:#C4A99B" data-color="#C4A99B" onclick="changeTheme(this)" title="奶茶"></div>
+                        <div class="color-btn" style="background:#8FA587" data-color="#8FA587" onclick="changeTheme(this)" title="苔绿"></div>
+                        <div class="color-btn" style="background:#B8977E" data-color="#B8977E" onclick="changeTheme(this)" title="焦糖"></div>
+                        <div class="color-btn" style="background:#A5B5C5" data-color="#A5B5C5" onclick="changeTheme(this)" title="雾蓝"></div>
+                        <div class="color-picker-wrap">
+                            <input type="color" id="customColor" value="#5D4E4A" oninput="changeCustomColor(this)" title="自定义">
+                            <span class="color-picker-label">自定义</span>
+                        </div>
+                    </div>
+                    <div class="saved-colors" id="savedColors"></div>
+                    <div class="saved-colors-hint" id="savedColorsHint">长按或拖出可删除</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 字体</div>
+                    <div class="form-row" style="align-items:center;margin-bottom:8px;">
+                        <span style="font-size:10px;color:var(--primary-light);white-space:nowrap;">大小</span>
+                        <input type="range" id="fontSizeSlider" min="50" max="200" value="120" style="flex:1;accent-color:var(--primary);" oninput="changeFontSize()">
+                        <span id="fontSizeValue" style="font-size:10px;min-width:36px;text-align:right;">120%</span>
+                    </div>
+                    <div class="custom-select-wrap" id="fontSelectWrap">
+                        <div class="custom-select-trigger" id="fontSelectTrigger" onclick="toggleFontDropdown()">
+                            <span id="fontSelectText">鸿蒙黑体</span>
+                            <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                        </div>
+                        <div class="custom-select-dropdown" id="fontSelectDropdown">
+                            <div class="custom-select-option" data-value="思源黑体">思源黑体</div>
+                            <div class="custom-select-option" data-value="鸿蒙黑体">鸿蒙黑体</div>
+                            <div class="custom-select-option" data-value="阿里妈妈数黑体">阿里妈妈数黑体</div>
+                            <div class="custom-select-option" data-value="江城黑体">江城黑体 <span class="recommend-tag">推荐</span></div>
+                            <div class="custom-select-option" data-value="得意黑">得意黑</div>
+                            <div class="custom-select-option" data-value="阿里妈妈方圆体">阿里妈妈方圆体</div>
+                            <div class="custom-select-option" data-value="寒蝉半圆体">寒蝉半圆体</div>
+                            <div class="custom-select-option" data-value="乐米波波体">乐米波波体</div>
+                            <div class="custom-select-option" data-value="荆南圆体">荆南圆体</div>
+                            <div class="custom-select-option" data-value="思印宋">思印宋 <span class="recommend-tag">推荐</span></div>
+                            <div class="custom-select-option" data-value="香萃等粗宋">香萃等粗宋</div>
+                            <div class="custom-select-option" data-value="花仿宋">花仿宋</div>
+                            <div class="custom-select-option" data-value="朱雀仿宋">朱雀仿宋</div>
+                            <div class="custom-select-option" data-value="站酷仓耳渔阳体">站酷仓耳渔阳体</div>
+                            <div class="custom-select-option" data-value="霞鹜文楷">霞鹜文楷 <span class="recommend-tag">推荐</span></div>
+                            <div class="custom-select-option" data-value="天王星像素">天王星像素 <span class="recommend-tag">推荐</span></div>
+                        </div>
+                        <select id="calendarFont" style="display:none;" onchange="changeFont()">
+                            <option value="思源黑体">思源黑体</option>
+                            <option value="鸿蒙黑体">鸿蒙黑体</option>
+                            <option value="阿里妈妈数黑体">阿里妈妈数黑体</option>
+                            <option value="江城黑体">江城黑体</option>
+                            <option value="得意黑">得意黑</option>
+                            <option value="阿里妈妈方圆体">阿里妈妈方圆体</option>
+                            <option value="寒蝉半圆体">寒蝉半圆体</option>
+                            <option value="乐米波波体">乐米波波体</option>
+                            <option value="荆南圆体">荆南圆体</option>
+                            <option value="思印宋">思印宋</option>
+                            <option value="香萃等粗宋">香萃等粗宋</option>
+                            <option value="花仿宋">花仿宋</option>
+                            <option value="朱雀仿宋">朱雀仿宋</option>
+                            <option value="站酷仓耳渔阳体">站酷仓耳渔阳体</option>
+                            <option value="霞鹜文楷">霞鹜文楷</option>
+                            <option value="天王星像素">天王星像素</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 底部文字</div>
+                    <input type="text" id="footerText" value="日历小助手" oninput="updateFooter()">
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✦ 背景图</div>
+                    <div class="upload-box" id="bgUpload">
+                        <input type="file" id="bgInput" accept="image/*">
+                        <div class="icon">🎨</div>
+                        <div class="text">上传背景</div>
+                        <div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">Alt+拖拽移动 · Alt+滚轮缩放</div>
+                    </div>
+                    <div class="bg-opacity-row" id="bgOpacityRow" style="display:none;">
+                        <span style="font-size:10px;color:var(--primary-light);">透明度</span>
+                        <input type="range" id="bgOpacitySlider" min="10" max="100" value="30" style="flex:1;accent-color:var(--primary);" oninput="changeBgOpacity()">
+                        <span id="bgOpacityValue" style="font-size:10px;min-width:32px;text-align:right;">30%</span>
+                    </div>
+                </div>
+
+                <div class="section full-width settings-save-section">
+                    <div class="section-title">✦ 设置模板</div>
+                    <div class="settings-row">
+                        <div class="custom-select-wrap settings-select-wrap" id="settingsSelectWrap">
+                            <div class="custom-select-trigger" id="settingsSelectTrigger" onclick="toggleSettingsDropdown()">
+                                <span id="settingsSelectText">选择已保存的设置...</span>
+                                <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                            </div>
+                            <div class="custom-select-dropdown" id="settingsSelectDropdown">
+                                <div class="custom-select-option settings-placeholder" data-value="">选择已保存的设置...</div>
+                            </div>
+                            <select id="savedSettingsSelect" style="display:none;" onchange="loadSavedSettings()">
+                                <option value="">选择已保存的设置...</option>
+                            </select>
+                        </div>
+                        <button class="settings-btn save" onclick="showSaveSettingsDialog()" title="在这里保存设置哦~">💾</button>
+                        <button class="settings-btn delete" onclick="deleteSavedSettings()" title="删除选中的设置">🗑️</button>
+                    </div>
+                    <div class="settings-tip">💡 保存设置后，12张月历/周历用同一个模板，尺寸风格都一致哦~</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentOrientation = 'vertical';
+        let currentPosition = 'bottom';
+        let currentStyle = 'full';
+        let cardWidth = 390, cardHeight = 520;
+        let sizeUnit = 'px';
+        let previewZoom = 100;
+        let fontSizeMultiplier = 1.2;
+        const PX_PER_CM = 37.8; // 96 DPI
+
+        let currentImageSrc = null, currentBgSrc = null;
+        let imgScale = 1, imgOffsetX = 0, imgOffsetY = 0, imgBaseScale = 1;
+        let bgScale = 1, bgOffsetX = 0, bgOffsetY = 0;
+        let isDragging = false, dragStartX, dragStartY, startOffsetX, startOffsetY;
+        let isBgDragging = false, bgDragStartX, bgDragStartY, bgStartOffsetX, bgStartOffsetY;
+        let isResizing = false, resizeDir = '', resizeStartX, resizeStartY, startWidth, startHeight;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthSelect = document.getElementById('month');
+            for (let i = 1; i <= 12; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i + '月';
+                monthSelect.appendChild(opt);
+            }
+            const now = new Date();
+            document.getElementById('year').value = now.getFullYear();
+            document.getElementById('month').value = now.getMonth() + 1;
+
+            setupBgUpload();
+            initImageSection();
+            initBgLayer();
+            initResizeHandles();
+            applyCardSize();
+            updateCalendar();
+            renderSizeHistory();
+            renderSavedColors();
+            renderSavedSettingsSelect();
+            updatePresetOptions();
+            setTimeout(autoFitPreview, 100);
+
+            // 轮播提示
+            initTipsRotation();
+
+            // 移动端更新占位符提示
+            if ('ontouchstart' in window) {
+                const placeholderSub = document.querySelector('#imageSection .placeholder .sub');
+                if (placeholderSub) placeholderSub.textContent = '拖动移动 · 双指缩放';
+            }
+
+            // Ctrl + 滚轮缩放日历显示
+            document.querySelector('.preview-area').addEventListener('wheel', (e) => {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -5 : 5;
+                    previewZoom = Math.max(10, Math.min(200, previewZoom + delta));
+                    document.getElementById('previewZoom').value = previewZoom;
+                    document.getElementById('zoomValue').textContent = previewZoom + '%';
+                    applyCardSize();
+                }
+            }, { passive: false });
+
+            // 自定义字体下拉框初始化
+            initFontDropdown();
+            initSettingsDropdown();
+        });
+
+        // 自定义字体下拉框
+        function initFontDropdown() {
+            const dropdown = document.getElementById('fontSelectDropdown');
+            const options = dropdown.querySelectorAll('.custom-select-option');
+            const hiddenSelect = document.getElementById('calendarFont');
+
+            // 初始化选中状态
+            updateFontDropdownSelection(hiddenSelect.value);
+
+            // 点击选项
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    hiddenSelect.value = value;
+                    document.getElementById('fontSelectText').textContent = value;
+                    updateFontDropdownSelection(value);
+                    closeFontDropdown();
+                    changeFont();
+                });
+            });
+
+            // 点击外部关闭
+            document.addEventListener('click', (e) => {
+                const wrap = document.getElementById('fontSelectWrap');
+                if (!wrap.contains(e.target)) {
+                    closeFontDropdown();
+                }
+            });
+        }
+
+        function toggleFontDropdown() {
+            const trigger = document.getElementById('fontSelectTrigger');
+            const dropdown = document.getElementById('fontSelectDropdown');
+            trigger.classList.toggle('active');
+            dropdown.classList.toggle('show');
+        }
+
+        function closeFontDropdown() {
+            document.getElementById('fontSelectTrigger').classList.remove('active');
+            document.getElementById('fontSelectDropdown').classList.remove('show');
+        }
+
+        function updateFontDropdownSelection(value) {
+            const options = document.querySelectorAll('#fontSelectDropdown .custom-select-option');
+            options.forEach(opt => {
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+            document.getElementById('fontSelectText').textContent = value;
+        }
+
+        // 自定义设置模板下拉框
+        function initSettingsDropdown() {
+            // 点击外部关闭
+            document.addEventListener('click', (e) => {
+                const wrap = document.getElementById('settingsSelectWrap');
+                if (wrap && !wrap.contains(e.target)) {
+                    closeSettingsDropdown();
+                }
+            });
+        }
+
+        function toggleSettingsDropdown() {
+            const trigger = document.getElementById('settingsSelectTrigger');
+            const dropdown = document.getElementById('settingsSelectDropdown');
+            trigger.classList.toggle('active');
+            dropdown.classList.toggle('show');
+        }
+
+        function closeSettingsDropdown() {
+            const trigger = document.getElementById('settingsSelectTrigger');
+            const dropdown = document.getElementById('settingsSelectDropdown');
+            if (trigger) trigger.classList.remove('active');
+            if (dropdown) dropdown.classList.remove('show');
+        }
+
+        function selectSettingsOption(index, name) {
+            const hiddenSelect = document.getElementById('savedSettingsSelect');
+            hiddenSelect.value = index;
+            document.getElementById('settingsSelectText').textContent = name || '选择已保存的设置...';
+            closeSettingsDropdown();
+            if (index !== '') {
+                loadSavedSettings();
+            }
+        }
+
+        const isMobile = 'ontouchstart' in window;
+        const tips = isMobile ? [
+            '内容超出别担心，调整字体大小即可',
+            '图片支持拖动移动和双指缩放',
+            '记得保存设置，12张日历风格统一',
+            '顶部可切换月历/周历哦'
+        ] : [
+            '内容超出别担心，调整字体大小即可',
+            'Ctrl+滚轮可快速缩放预览大小',
+            '记得保存设置，12张日历风格统一',
+            '顶部可切换月历/周历哦'
+        ];
+        let currentTipIndex = 0;
+
+        function initTipsRotation() {
+            setInterval(() => {
+                const container = document.getElementById('tipsContainer');
+                const tipText = document.getElementById('tipText');
+
+                // 淡出
+                container.classList.add('fade-out');
+
+                setTimeout(() => {
+                    // 切换文字
+                    currentTipIndex = (currentTipIndex + 1) % tips.length;
+                    tipText.textContent = tips[currentTipIndex];
+
+                    // 淡入
+                    container.classList.remove('fade-out');
+                }, 500);
+            }, 5000);
+        }
+
+        function setupBgUpload() {
+            const area = document.getElementById('bgUpload');
+            const input = document.getElementById('bgInput');
+            area.onclick = (e) => { if (e.target.tagName !== 'BUTTON') input.click(); };
+            input.onchange = function() { if (this.files && this.files[0]) processFile(this.files[0], 'bg'); };
+
+            // 拖拽上传
+            area.ondragover = (e) => {
+                e.preventDefault();
+                area.style.borderColor = 'var(--primary)';
+                area.style.background = 'var(--yellow)';
+            };
+            area.ondragleave = () => {
+                area.style.borderColor = '';
+                area.style.background = '';
+            };
+            area.ondrop = (e) => {
+                e.preventDefault();
+                area.style.borderColor = '';
+                area.style.background = '';
+                if (e.dataTransfer.files.length && e.dataTransfer.files[0].type.startsWith('image/')) {
+                    processFile(e.dataTransfer.files[0], 'bg');
+                }
+            };
+        }
+
+        function initImageSection() {
+            const section = document.getElementById('imageSection');
+
+            section.onclick = function(e) {
+                if (!currentImageSrc && e.target.closest('.placeholder')) {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = function() { if (this.files && this.files[0]) processFile(this.files[0], 'image'); };
+                    input.click();
+                }
+            };
+
+            section.ondragover = (e) => { e.preventDefault(); section.classList.add('drag-over'); };
+            section.ondragleave = () => section.classList.remove('drag-over');
+            section.ondrop = (e) => {
+                e.preventDefault();
+                section.classList.remove('drag-over');
+                if (e.dataTransfer.files.length && e.dataTransfer.files[0].type.startsWith('image/')) {
+                    processFile(e.dataTransfer.files[0], 'image');
+                }
+            };
+
+            section.onmousedown = (e) => {
+                if (currentImageSrc && e.button === 0) {
+                    isDragging = true;
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                    startOffsetX = imgOffsetX;
+                    startOffsetY = imgOffsetY;
+                    section.classList.add('dragging');
+                    e.preventDefault();
+                }
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+
+            // 触摸事件支持（移动端）
+            section.ontouchstart = (e) => {
+                if (currentImageSrc && e.touches.length === 1) {
+                    isDragging = true;
+                    dragStartX = e.touches[0].clientX;
+                    dragStartY = e.touches[0].clientY;
+                    startOffsetX = imgOffsetX;
+                    startOffsetY = imgOffsetY;
+                    section.classList.add('dragging');
+                }
+            };
+            document.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches.length === 1) {
+                    const dx = e.touches[0].clientX - dragStartX;
+                    const dy = e.touches[0].clientY - dragStartY;
+                    imgOffsetX = startOffsetX + dx;
+                    imgOffsetY = startOffsetY + dy;
+                    updateImageTransform();
+                }
+            }, { passive: true });
+            document.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    section.classList.remove('dragging');
+                }
+            });
+
+            // 双指缩放（移动端）
+            let lastTouchDist = 0;
+            section.addEventListener('touchstart', (e) => {
+                if (currentImageSrc && e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+                }
+            });
+            section.addEventListener('touchmove', (e) => {
+                if (currentImageSrc && e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (lastTouchDist > 0) {
+                        const delta = (dist - lastTouchDist) * 0.01;
+                        const minScale = imgBaseScale * 0.5;
+                        const maxScale = imgBaseScale * 5;
+                        imgScale = Math.max(minScale, Math.min(maxScale, imgScale + delta));
+                        updateImageTransform();
+                    }
+                    lastTouchDist = dist;
+                }
+            }, { passive: false });
+
+            section.onwheel = (e) => {
+                if (currentImageSrc) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    // 最小缩放为基础缩放的50%，最大为基础缩放的5倍
+                    const minScale = imgBaseScale * 0.5;
+                    const maxScale = imgBaseScale * 5;
+                    imgScale = Math.max(minScale, Math.min(maxScale, imgScale + delta));
+                    updateImageTransform();
+                }
+            };
+        }
+
+        function handleMouseMove(e) {
+            if (isDragging) {
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+                imgOffsetX = startOffsetX + dx;
+                imgOffsetY = startOffsetY + dy;
+                updateImageTransform();
+            }
+            if (isBgDragging) {
+                const dx = e.clientX - bgDragStartX;
+                const dy = e.clientY - bgDragStartY;
+                bgOffsetX = bgStartOffsetX + dx;
+                bgOffsetY = bgStartOffsetY + dy;
+                updateBgTransform();
+            }
+            if (isResizing) {
+                handleResize(e);
+            }
+        }
+
+        function handleMouseUp() {
+            if (isDragging) {
+                isDragging = false;
+                document.getElementById('imageSection').classList.remove('dragging');
+            }
+            if (isBgDragging) {
+                isBgDragging = false;
+            }
+            if (isResizing) {
+                isResizing = false;
+                document.getElementById('resizeTooltip').classList.remove('show');
+                // 拖拽结束后自动保存尺寸
+                autoSaveSize();
+            }
+        }
+
+        function initResizeHandles() {
+            document.querySelectorAll('.resize-handle').forEach(handle => {
+                handle.onmousedown = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isResizing = true;
+                    resizeDir = handle.dataset.dir;
+                    resizeStartX = e.clientX;
+                    resizeStartY = e.clientY;
+                    startWidth = cardWidth;
+                    startHeight = cardHeight;
+                };
+            });
+        }
+
+        function handleResize(e) {
+            const dx = e.clientX - resizeStartX;
+            const dy = e.clientY - resizeStartY;
+
+            if (resizeDir.includes('e')) cardWidth = Math.max(300, startWidth + dx);
+            if (resizeDir.includes('s')) cardHeight = Math.max(200, startHeight + dy);
+
+            applyCardSize();
+            syncSizeInputs();
+            updateSliders();
+
+            // 显示尺寸提示
+            const tooltip = document.getElementById('resizeTooltip');
+            let text = `${Math.round(cardWidth)} × ${Math.round(cardHeight)} px`;
+            if (sizeUnit === 'cm') {
+                text += ` (${(cardWidth / PX_PER_CM).toFixed(1)} × ${(cardHeight / PX_PER_CM).toFixed(1)} cm)`;
+            }
+            tooltip.textContent = text;
+            tooltip.classList.add('show');
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY + 15) + 'px';
+        }
+
+        function applyCardSize() {
+            const card = document.getElementById('calendarCard');
+            const container = document.getElementById('canvasContainer');
+            const calSection = document.getElementById('calendarSection');
+            card.style.width = cardWidth + 'px';
+            card.style.height = cardHeight + 'px';
+            container.style.transform = `scale(${previewZoom / 100})`;
+            container.style.transformOrigin = 'center center';
+
+            // 根据日历区域大小计算字体缩放比例
+            // 基准：400px宽度时缩放为1
+            const calWidth = cardWidth * 0.65; // 日历区域约占65%
+            const calHeight = cardHeight;
+            const baseSize = 350;
+            const autoScale = Math.min(calWidth, calHeight) / baseSize;
+            const finalScale = Math.max(0.6, Math.min(4, autoScale * fontSizeMultiplier));
+            calSection.style.setProperty('--cal-scale', finalScale.toFixed(2));
+        }
+
+        function syncSizeInputs() {
+            if (sizeUnit === 'px') {
+                document.getElementById('widthInput').value = Math.round(cardWidth);
+                document.getElementById('heightInput').value = Math.round(cardHeight);
+            } else {
+                document.getElementById('widthInput').value = (cardWidth / PX_PER_CM).toFixed(1);
+                document.getElementById('heightInput').value = (cardHeight / PX_PER_CM).toFixed(1);
+            }
+        }
+
+        function updateSizeFromInput() {
+            let w = parseFloat(document.getElementById('widthInput').value) || 400;
+            let h = parseFloat(document.getElementById('heightInput').value) || 300;
+            if (sizeUnit === 'cm') {
+                // A3 限制: 最大 42cm
+                w = Math.min(42, Math.max(5, w));
+                h = Math.min(42, Math.max(5, h));
+                cardWidth = Math.round(w * PX_PER_CM);
+                cardHeight = Math.round(h * PX_PER_CM);
+            } else {
+                cardWidth = Math.min(3000, Math.max(100, Math.round(w)));
+                cardHeight = Math.min(3000, Math.max(100, Math.round(h)));
+            }
+            applyCardSize();
+            autoFitPreview();
+        }
+
+        function autoFitPreview() {
+            const previewArea = document.querySelector('.preview-area');
+            const sizeControls = document.querySelector('.size-controls');
+            const zoomControls = document.querySelector('.zoom-controls');
+            const sizeHistory = document.getElementById('sizeHistory');
+
+            // 计算可用区域，排除控制栏占用的空间
+            const sizeControlsHeight = sizeControls ? sizeControls.offsetHeight : 0;
+            const sizeHistoryHeight = sizeHistory && sizeHistory.children.length > 0 ? sizeHistory.offsetHeight + 12 : 0;
+            const topMargin = sizeControlsHeight + sizeHistoryHeight + 30; // 顶部控制栏+历史记录+间距
+            const bottomMargin = zoomControls ? zoomControls.offsetHeight + 20 : 40; // 底部控制栏+间距
+            const sideMargin = 40; // 左右边距
+
+            const availableWidth = previewArea.clientWidth - sideMargin * 2;
+            const availableHeight = previewArea.clientHeight - topMargin - bottomMargin;
+
+            const scaleW = availableWidth / cardWidth;
+            const scaleH = availableHeight / cardHeight;
+            const fitScale = Math.min(scaleW, scaleH) * 100;
+
+            previewZoom = Math.max(10, Math.min(200, Math.round(fitScale)));
+            document.getElementById('previewZoom').value = previewZoom;
+            document.getElementById('zoomValue').textContent = previewZoom + '%';
+            applyCardSize();
+        }
+
+        function changeSizeUnit() {
+            sizeUnit = document.getElementById('sizeUnit').value;
+            syncSizeInputs();
+            updateSizeLimits();
+            updatePresetOptions();
+        }
+
+        const presetsCm = [
+            { label: 'A3 竖版', w: 29.7, h: 42 },
+            { label: 'A3 横版', w: 42, h: 29.7 },
+            { label: 'A4 竖版', w: 21, h: 29.7 },
+            { label: 'A4 横版', w: 29.7, h: 21 },
+            { label: 'A5 竖版', w: 14.8, h: 21 },
+            { label: 'A5 横版', w: 21, h: 14.8 },
+            { label: 'A6 竖版', w: 10.5, h: 14.8 },
+            { label: 'A6 横版', w: 14.8, h: 10.5 },
+        ];
+
+        const presetsPx = [
+            { label: 'iPhone 壁纸', w: 1170, h: 2532 },
+            { label: 'iPhone Pro Max', w: 1290, h: 2796 },
+            { label: '安卓 1080P', w: 1080, h: 1920 },
+            { label: '安卓 2K 长屏', w: 1080, h: 2340 },
+            { label: '安卓 2K 高清', w: 1440, h: 3200 },
+            { label: 'iPad 壁纸', w: 2048, h: 2732 },
+            { label: '微信朋友圈', w: 1080, h: 1080 },
+            { label: '小红书封面', w: 1242, h: 1660 },
+        ];
+
+        function updatePresetOptions() {
+            const select = document.getElementById('sizePreset');
+            const presets = sizeUnit === 'cm' ? presetsCm : presetsPx;
+            select.innerHTML = '<option value="">预设尺寸</option>' +
+                presets.map((p, i) => `<option value="${i}">${p.label} (${p.w}×${p.h})</option>`).join('');
+        }
+
+        function applyPreset() {
+            const select = document.getElementById('sizePreset');
+            const index = select.value;
+            if (index === '') return;
+
+            const presets = sizeUnit === 'cm' ? presetsCm : presetsPx;
+            const p = presets[parseInt(index)];
+
+            if (sizeUnit === 'cm') {
+                cardWidth = Math.round(p.w * PX_PER_CM);
+                cardHeight = Math.round(p.h * PX_PER_CM);
+            } else {
+                cardWidth = p.w;
+                cardHeight = p.h;
+            }
+
+            // 更新方向
+            const orient = cardWidth >= cardHeight ? 'horizontal' : 'vertical';
+            currentOrientation = orient;
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(orient);
+            updatePositionButtons();
+
+            syncSizeInputs();
+            applyCardSize();
+            autoFitPreview();
+            select.value = ''; // 重置选择
+        }
+
+        function updateSizeLimits() {
+            const widthInput = document.getElementById('widthInput');
+            const heightInput = document.getElementById('heightInput');
+            if (sizeUnit === 'cm') {
+                // A3 最大尺寸: 29.7cm x 42cm
+                widthInput.max = 42;
+                heightInput.max = 42;
+                widthInput.min = 5;
+                heightInput.min = 5;
+                widthInput.step = 0.5;
+                heightInput.step = 0.5;
+            } else {
+                widthInput.max = 3000;
+                heightInput.max = 3000;
+                widthInput.min = 100;
+                heightInput.min = 100;
+                widthInput.step = 10;
+                heightInput.step = 10;
+            }
+        }
+
+        let sliderTimeout;
+        function showSlider(type) {
+            clearTimeout(sliderTimeout);
+            document.getElementById('widthSliderWrap').classList.remove('show');
+            document.getElementById('heightSliderWrap').classList.remove('show');
+            document.getElementById(type + 'SliderWrap').classList.add('show');
+            updateSliders();
+        }
+        function hideSlider(type) {
+            sliderTimeout = setTimeout(() => {
+                document.getElementById(type + 'SliderWrap').classList.remove('show');
+            }, 200);
+        }
+
+        let ratioSliderTimeout;
+        function showRatioSlider(type) {
+            clearTimeout(ratioSliderTimeout);
+            document.getElementById('ratioWSliderWrap').classList.remove('show');
+            document.getElementById('ratioHSliderWrap').classList.remove('show');
+            const slider = document.getElementById('ratio' + type.toUpperCase() + 'SliderWrap');
+            slider.classList.add('show');
+            // 同步滑块值
+            const inputVal = parseInt(document.getElementById('customRatio' + type.toUpperCase()).value) || 1;
+            document.getElementById('ratio' + type.toUpperCase() + 'Slider').value = inputVal;
+            document.getElementById('ratio' + type.toUpperCase() + 'Value').textContent = inputVal;
+        }
+        function hideRatioSlider(type) {
+            ratioSliderTimeout = setTimeout(() => {
+                document.getElementById('ratio' + type.toUpperCase() + 'SliderWrap').classList.remove('show');
+            }, 200);
+        }
+        function updateRatioFromSlider(type) {
+            const val = parseInt(document.getElementById('ratio' + type.toUpperCase() + 'Slider').value);
+            document.getElementById('customRatio' + type.toUpperCase()).value = val;
+            document.getElementById('ratio' + type.toUpperCase() + 'Value').textContent = val;
+        }
+        function updateRatioFromInput() {
+            const wVal = parseInt(document.getElementById('customRatioW').value) || 1;
+            const hVal = parseInt(document.getElementById('customRatioH').value) || 1;
+            document.getElementById('ratioWSlider').value = wVal;
+            document.getElementById('ratioHSlider').value = hVal;
+            document.getElementById('ratioWValue').textContent = wVal;
+            document.getElementById('ratioHValue').textContent = hVal;
+        }
+
+        function updatePreviewZoom() {
+            previewZoom = parseInt(document.getElementById('previewZoom').value);
+            document.getElementById('zoomValue').textContent = previewZoom + '%';
+            applyCardSize();
+        }
+
+        let sizeHistory = JSON.parse(localStorage.getItem('calendarSizeHistory') || '[]');
+        // 限制最多3个
+        if (sizeHistory.length > 3) {
+            sizeHistory = sizeHistory.slice(0, 3);
+            localStorage.setItem('calendarSizeHistory', JSON.stringify(sizeHistory));
+        }
+
+        function autoSaveSize() {
+            const sizeStr = sizeUnit === 'cm'
+                ? `${(cardWidth / PX_PER_CM).toFixed(1)}×${(cardHeight / PX_PER_CM).toFixed(1)}cm`
+                : `${Math.round(cardWidth)}×${Math.round(cardHeight)}px`;
+            const sizeData = { w: cardWidth, h: cardHeight, unit: sizeUnit, label: sizeStr };
+
+            // 检查是否已存在相同尺寸
+            const exists = sizeHistory.some(s => s.w === cardWidth && s.h === cardHeight);
+            if (!exists) {
+                sizeHistory.unshift(sizeData);
+                if (sizeHistory.length > 3) sizeHistory.pop(); // 最多保存3个
+                localStorage.setItem('calendarSizeHistory', JSON.stringify(sizeHistory));
+                renderSizeHistory();
+            }
+        }
+
+        function saveCurrentSize() {
+            autoSaveSize();
+        }
+
+        function renderSizeHistory() {
+            const container = document.getElementById('sizeHistory');
+            container.innerHTML = sizeHistory.map((s, i) =>
+                `<div class="size-chip" onclick="applySavedSize(${i})" title="点击应用此尺寸">
+                    ${s.label}
+                    <span class="delete" onclick="event.stopPropagation();deleteSavedSize(${i})">✕</span>
+                </div>`
+            ).join('');
+        }
+
+        function applySavedSize(index) {
+            const s = sizeHistory[index];
+            cardWidth = s.w;
+            cardHeight = s.h;
+            syncSizeInputs();
+            applyCardSize();
+            autoFitPreview();
+        }
+
+        function deleteSavedSize(index) {
+            sizeHistory.splice(index, 1);
+            localStorage.setItem('calendarSizeHistory', JSON.stringify(sizeHistory));
+            renderSizeHistory();
+        }
+
+        function resetToDefault() {
+            // 默认: 3:4 竖版，图片在下方
+            cardWidth = 390;
+            cardHeight = 520;
+            currentOrientation = 'vertical';
+            currentPosition = 'bottom';
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add('vertical');
+            card.dataset.pos = 'bottom';
+
+            // 重置比例按钮
+            document.querySelectorAll('.pill-btn[data-ratio]').forEach(e => e.classList.remove('active'));
+            document.querySelector('.pill-btn[data-ratio="3:4"]').classList.add('active');
+
+            // 重置位置按钮
+            updatePositionButtons();
+            document.querySelectorAll('#positionGroup .pill-btn').forEach(e => e.classList.remove('active'));
+            document.querySelector('#positionGroup .pill-btn[data-pos="bottom"]').classList.add('active');
+
+            syncSizeInputs();
+            applyCardSize();
+            autoFitPreview();
+        }
+
+        function processFile(file, type) {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'image') {
+                    currentImageSrc = e.target.result;
+                    imgOffsetX = 0;
+                    imgOffsetY = 0;
+                    // 获取原始图片尺寸并计算适配宽度的缩放
+                    const img = new Image();
+                    img.onload = function() {
+                        originalImageSize = { width: img.width, height: img.height };
+                        // 计算让图片宽度适配容器宽度的缩放比例
+                        const section = document.getElementById('imageSection');
+                        if (section && img.width > 0) {
+                            const sectionWidth = section.offsetWidth;
+                            const sectionHeight = section.offsetHeight;
+                            // 计算让图片覆盖整个区域需要的最小缩放
+                            const scaleToFitWidth = sectionWidth / img.width;
+                            const scaleToFitHeight = sectionHeight / img.height;
+                            // 使用较大值确保图片覆盖整个区域
+                            imgBaseScale = Math.max(scaleToFitWidth, scaleToFitHeight);
+                            imgScale = imgBaseScale;
+                        } else {
+                            imgBaseScale = 1;
+                            imgScale = 1;
+                        }
+                        updateImageTransform();
+                    };
+                    img.src = e.target.result;
+                    updateImageSection();
+                } else {
+                    currentBgSrc = e.target.result;
+                    bgScale = 1;
+                    bgOffsetX = 0;
+                    bgOffsetY = 0;
+                    updateBgLayer();
+                    updateBgUploadArea();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateImageSection() {
+            const section = document.getElementById('imageSection');
+            if (currentImageSrc) {
+                const isTouchDevice = 'ontouchstart' in window;
+                const hintText = isTouchDevice ? '拖动移动 · 双指缩放 · 双击删除' : '拖拽移动 · 滚轮缩放 · 双击删除';
+                section.innerHTML = `<img src="${currentImageSrc}"><div class="image-hint">${hintText}</div>`;
+                // 延迟更新transform，确保DOM已渲染
+                setTimeout(() => updateImageTransform(), 0);
+                section.ondblclick = () => {
+                    currentImageSrc = null;
+                    imgScale = 1;
+                    imgOffsetX = 0;
+                    imgOffsetY = 0;
+                    originalImageSize = { width: 0, height: 0 };
+                    updateImageSection();
+                };
+            } else {
+                const isTouchPlaceholder = 'ontouchstart' in window;
+                const subText = isTouchPlaceholder ? '拖动移动 · 双指缩放' : '拖拽移动 · 滚轮缩放';
+                section.innerHTML = `<div class="placeholder"><div class="icon">🖼️</div><div>点击上传图片</div><div class="sub">${subText}</div></div>`;
+                section.ondblclick = null;
+            }
+            initImageSection();
+        }
+
+        function updateImageTransform() {
+            const img = document.querySelector('#imageSection img');
+            if (img) {
+                // 先居中(-50%, -50%)，再应用用户的偏移和缩放
+                img.style.transform = `translate(calc(-50% + ${imgOffsetX}px), calc(-50% + ${imgOffsetY}px)) scale(${imgScale})`;
+            }
+        }
+
+        function updateBgLayer() {
+            const layer = document.getElementById('bgLayer');
+            const card = document.getElementById('calendarCard');
+            const opacityRow = document.getElementById('bgOpacityRow');
+            if (currentBgSrc) {
+                layer.innerHTML = `<img src="${currentBgSrc}"><div class="bg-hint">Alt+拖拽移动 · Alt+滚轮缩放</div>`;
+                updateBgTransform();
+                card.classList.add('has-bg');
+                opacityRow.style.display = 'flex';
+            } else {
+                layer.innerHTML = '';
+                card.classList.remove('has-bg');
+                opacityRow.style.display = 'none';
+            }
+        }
+
+        function updateBgTransform() {
+            const img = document.querySelector('#bgLayer img');
+            if (img) {
+                img.style.transform = `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${bgScale})`;
+            }
+        }
+
+        function initBgLayer() {
+            const card = document.getElementById('calendarCard');
+
+            // Alt + 拖拽移动背景图
+            card.addEventListener('mousedown', (e) => {
+                if (currentBgSrc && e.altKey && e.button === 0) {
+                    isBgDragging = true;
+                    bgDragStartX = e.clientX;
+                    bgDragStartY = e.clientY;
+                    bgStartOffsetX = bgOffsetX;
+                    bgStartOffsetY = bgOffsetY;
+                    e.preventDefault();
+                }
+            });
+
+            // Alt + 滚轮缩放背景图
+            card.addEventListener('wheel', (e) => {
+                if (currentBgSrc && e.altKey) {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    bgScale = Math.max(0.5, Math.min(5, bgScale + delta));
+                    updateBgTransform();
+                }
+            }, { passive: false });
+        }
+
+        function changeBgOpacity() {
+            const value = parseInt(document.getElementById('bgOpacitySlider').value);
+            document.getElementById('bgOpacityValue').textContent = value + '%';
+            document.documentElement.style.setProperty('--bg-opacity', value / 100);
+        }
+
+        function updateBgUploadArea() {
+            const area = document.getElementById('bgUpload');
+            if (currentBgSrc) {
+                area.classList.add('has-image');
+                area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><img src="${currentBgSrc}">
+                    <div class="upload-actions">
+                        <button class="change-btn" onclick="event.stopPropagation();document.getElementById('bgInput').click()">换</button>
+                        <button class="delete-btn" onclick="event.stopPropagation();deleteBg()">删</button>
+                    </div>`;
+            } else {
+                area.classList.remove('has-image');
+                const isTouchBg = 'ontouchstart' in window;
+                const bgSubText = isTouchBg ? '长按拖动 · 双指缩放' : 'Alt+拖拽移动 · Alt+滚轮缩放';
+                area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><div class="icon">🎨</div><div class="text">上传背景</div><div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">${bgSubText}</div>`;
+            }
+            setupBgUpload();
+        }
+
+        function deleteBg() {
+            currentBgSrc = null;
+            updateBgLayer();
+            updateBgUploadArea();
+        }
+
+        function changeType(el) {
+            document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            const isWeek = el.dataset.type === 'week';
+            const weekSelector = document.getElementById('weekSelector');
+            weekSelector.style.display = isWeek ? 'flex' : 'none';
+            if (isWeek) {
+                const year = parseInt(document.getElementById('year').value);
+                const month = parseInt(document.getElementById('month').value);
+                updateWeekOptions(year, month);
+            }
+            updateCalendar();
+        }
+
+        let originalImageSize = { width: 0, height: 0 };
+
+        function applyOriginalRatio(el) {
+            if (!currentImageSrc || originalImageSize.width === 0) {
+                alert('请先上传图片');
+                return;
+            }
+
+            document.querySelectorAll('.pill-btn[data-ratio]').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+
+            const w = originalImageSize.width;
+            const h = originalImageSize.height;
+            const orient = w >= h ? 'horizontal' : 'vertical';
+            currentOrientation = orient;
+
+            if (orient === 'horizontal') {
+                cardWidth = 600;
+                cardHeight = Math.round(600 * h / w);
+            } else {
+                cardHeight = 520;
+                cardWidth = Math.round(520 * w / h);
+            }
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(orient);
+
+            updatePositionButtons();
+            applyCardSize();
+            syncSizeInputs();
+            autoFitPreview();
+        }
+
+        function applyCustomRatio() {
+            const w = parseInt(document.getElementById('customRatioW').value) || 1;
+            const h = parseInt(document.getElementById('customRatioH').value) || 1;
+
+            document.querySelectorAll('.pill-btn[data-ratio]').forEach(e => e.classList.remove('active'));
+
+            const orient = w >= h ? 'horizontal' : 'vertical';
+            currentOrientation = orient;
+
+            if (orient === 'horizontal') {
+                cardWidth = 600;
+                cardHeight = Math.round(600 * h / w);
+            } else {
+                cardHeight = 520;
+                cardWidth = Math.round(520 * w / h);
+            }
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(orient);
+
+            updatePositionButtons();
+            applyCardSize();
+            syncSizeInputs();
+            autoFitPreview();
+        }
+
+        function changeRatio(el) {
+            document.querySelectorAll('.pill-btn[data-ratio]').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+
+            const ratio = el.dataset.ratio;
+            const orient = el.dataset.orient;
+            currentOrientation = orient;
+
+            const [w, h] = ratio.split(':').map(Number);
+            if (orient === 'horizontal') {
+                cardWidth = 600;
+                cardHeight = Math.round(600 * h / w);
+            } else {
+                cardHeight = 520;
+                cardWidth = Math.round(520 * w / h);
+            }
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(orient);
+
+            updatePositionButtons();
+            applyCardSize();
+            syncSizeInputs();
+        }
+
+        function updatePositionButtons() {
+            const btns = document.querySelectorAll('#positionGroup .pill-btn');
+            btns.forEach(btn => {
+                const pos = btn.dataset.pos;
+                if (pos === 'none') {
+                    btn.disabled = false; // 无图选项始终可用
+                } else if (currentOrientation === 'horizontal') {
+                    btn.disabled = (pos === 'top' || pos === 'bottom');
+                    if (btn.disabled && btn.classList.contains('active')) {
+                        btn.classList.remove('active');
+                        document.querySelector('#positionGroup .pill-btn[data-pos="right"]').classList.add('active');
+                        currentPosition = 'right';
+                        document.getElementById('calendarCard').dataset.pos = 'right';
+                    }
+                } else {
+                    btn.disabled = (pos === 'left' || pos === 'right');
+                    if (btn.disabled && btn.classList.contains('active')) {
+                        btn.classList.remove('active');
+                        document.querySelector('#positionGroup .pill-btn[data-pos="bottom"]').classList.add('active');
+                        currentPosition = 'bottom';
+                        document.getElementById('calendarCard').dataset.pos = 'bottom';
+                    }
+                }
+            });
+        }
+
+        function changePosition(el) {
+            if (el.disabled) return;
+            document.querySelectorAll('#positionGroup .pill-btn').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            currentPosition = el.dataset.pos;
+            document.getElementById('calendarCard').dataset.pos = currentPosition;
+        }
+
+        function changeStyle(el) {
+            document.querySelectorAll('.grid-btn[data-style]').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            currentStyle = el.dataset.style;
+            updateCalendar();
+        }
+
+        function toggleDivider() {
+            const section = document.querySelector('.calendar-section');
+            const checked = document.getElementById('dividerToggle').checked;
+            const thicknessWrap = document.getElementById('dividerThicknessWrap');
+            if (checked) {
+                section.classList.add('has-divider');
+                thicknessWrap.style.display = 'flex';
+            } else {
+                section.classList.remove('has-divider');
+                thicknessWrap.style.display = 'none';
+            }
+        }
+
+        function updateDividerThickness() {
+            const value = document.getElementById('dividerThickness').value;
+            document.getElementById('dividerThicknessValue').textContent = value + 'px';
+            document.documentElement.style.setProperty('--divider-thickness', value + 'px');
+        }
+
+        function changeTheme(el) {
+            document.querySelectorAll('.color-btn').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.saved-color').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            const color = el.dataset.color;
+            document.documentElement.style.setProperty('--cal-theme', color);
+            document.getElementById('customColor').value = color;
+        }
+
+        let savedColors = JSON.parse(localStorage.getItem('calendarSavedColors') || '[]');
+        let colorLongPressTimer = null;
+        let currentCustomColor = null;
+
+        function changeCustomColor(input) {
+            document.querySelectorAll('.color-btn').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.saved-color').forEach(e => e.classList.remove('active'));
+            document.documentElement.style.setProperty('--cal-theme', input.value);
+            currentCustomColor = input.value;
+        }
+
+        // 当颜色选择器关闭时保存颜色
+        document.getElementById('customColor').addEventListener('change', function() {
+            if (currentCustomColor) {
+                saveCustomColor(currentCustomColor);
+            }
+        });
+
+        function saveCustomColor(color) {
+            // 检查是否已存在（忽略大小写）
+            const exists = savedColors.some(c => c.toLowerCase() === color.toLowerCase());
+            if (!exists) {
+                savedColors.unshift(color);
+                if (savedColors.length > 6) savedColors.pop(); // 最多保存6个
+                localStorage.setItem('calendarSavedColors', JSON.stringify(savedColors));
+                renderSavedColors();
+            }
+        }
+
+        function renderSavedColors() {
+            const container = document.getElementById('savedColors');
+            const hint = document.getElementById('savedColorsHint');
+            container.innerHTML = savedColors.map((color, i) =>
+                `<div class="saved-color" style="background:${color}" data-color="${color}" data-index="${i}" draggable="true"
+                    onclick="applySavedColor(this)"
+                    onmousedown="startColorLongPress(${i})"
+                    onmouseup="cancelColorLongPress()"
+                    onmouseleave="cancelColorLongPress()"
+                    ontouchstart="startColorLongPress(${i})"
+                    ontouchend="cancelColorLongPress()"
+                    ondragstart="startColorDrag(event, ${i})"
+                    ondragend="endColorDrag(event, ${i})"
+></div>`
+            ).join('');
+            // 只有有自定义颜色时才显示删除提示
+            hint.style.display = savedColors.length > 0 ? 'block' : 'none';
+        }
+
+        let draggingColorIndex = -1;
+
+        function startColorDrag(e, index) {
+            draggingColorIndex = index;
+            e.target.style.opacity = '0.5';
+        }
+
+        function endColorDrag(e, index) {
+            e.target.style.opacity = '1';
+            // 检查是否拖出了主题色区域
+            const section = e.target.closest('.section');
+            if (section) {
+                const rect = section.getBoundingClientRect();
+                const x = e.clientX;
+                const y = e.clientY;
+                // 如果拖到区域外则删除
+                if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                    deleteSavedColor(index);
+                }
+            }
+            draggingColorIndex = -1;
+        }
+
+        function applySavedColor(el) {
+            if (colorLongPressTimer) return; // 如果正在长按则不应用
+            const color = el.dataset.color;
+            document.querySelectorAll('.color-btn').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.saved-color').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            document.documentElement.style.setProperty('--cal-theme', color);
+            document.getElementById('customColor').value = color;
+        }
+
+        function startColorLongPress(index) {
+            colorLongPressTimer = setTimeout(() => {
+                deleteSavedColor(index);
+                colorLongPressTimer = null;
+            }, 600); // 600ms长按触发删除
+        }
+
+        function cancelColorLongPress() {
+            if (colorLongPressTimer) {
+                clearTimeout(colorLongPressTimer);
+                colorLongPressTimer = null;
+            }
+        }
+
+        function deleteSavedColor(index) {
+            savedColors.splice(index, 1);
+            localStorage.setItem('calendarSavedColors', JSON.stringify(savedColors));
+            renderSavedColors();
+        }
+
+        // ========== 设置模板保存功能 ==========
+        let savedSettingsList = JSON.parse(localStorage.getItem('calendarSavedSettings') || '[]');
+
+        function renderSavedSettingsSelect() {
+            const select = document.getElementById('savedSettingsSelect');
+            select.innerHTML = '<option value="">选择已保存的设置...</option>' +
+                savedSettingsList.map((s, i) => `<option value="${i}">${s.name}</option>`).join('');
+
+            // 更新自定义下拉框
+            const dropdown = document.getElementById('settingsSelectDropdown');
+            if (dropdown) {
+                dropdown.innerHTML = '<div class="custom-select-option settings-placeholder" data-value="" onclick="selectSettingsOption(\'\', \'\')">选择已保存的设置...</div>' +
+                    savedSettingsList.map((s, i) =>
+                        `<div class="custom-select-option" data-value="${i}" onclick="selectSettingsOption('${i}', '${s.name.replace(/'/g, "\\'")}')">${s.name}</div>`
+                    ).join('');
+            }
+            // 重置显示文字
+            document.getElementById('settingsSelectText').textContent = '选择已保存的设置...';
+        }
+
+        function showSaveSettingsDialog() {
+            document.getElementById('settingsName').value = '';
+            document.getElementById('saveDialogOverlay').classList.add('show');
+            document.getElementById('settingsName').focus();
+        }
+
+        function closeSaveDialog(e) {
+            if (!e || e.target === document.getElementById('saveDialogOverlay')) {
+                document.getElementById('saveDialogOverlay').classList.remove('show');
+            }
+        }
+
+        function confirmSaveSettings() {
+            const name = document.getElementById('settingsName').value.trim();
+            if (!name) {
+                alert('请输入设置名称');
+                return;
+            }
+
+            // 收集当前所有设置
+            const settings = {
+                name: name,
+                cardWidth: cardWidth,
+                cardHeight: cardHeight,
+                orientation: currentOrientation,
+                position: currentPosition,
+                style: currentStyle,
+                themeColor: getComputedStyle(document.documentElement).getPropertyValue('--cal-theme').trim(),
+                font: document.getElementById('calendarFont').value,
+                fontSize: document.getElementById('fontSizeSlider').value,
+                footerText: document.getElementById('footerText').value,
+                sizeUnit: sizeUnit,
+                hasDivider: document.getElementById('dividerToggle').checked,
+                dividerThickness: document.getElementById('dividerThickness').value
+            };
+
+            savedSettingsList.unshift(settings);
+            if (savedSettingsList.length > 10) savedSettingsList.pop(); // 最多保存10个
+            localStorage.setItem('calendarSavedSettings', JSON.stringify(savedSettingsList));
+            renderSavedSettingsSelect();
+            closeSaveDialog();
+        }
+
+        function loadSavedSettings() {
+            const select = document.getElementById('savedSettingsSelect');
+            const index = select.value;
+            if (index === '') return;
+
+            const s = savedSettingsList[parseInt(index)];
+            if (!s) return;
+
+            // 恢复设置
+            cardWidth = s.cardWidth;
+            cardHeight = s.cardHeight;
+            currentOrientation = s.orientation;
+            currentPosition = s.position;
+            currentStyle = s.style;
+            sizeUnit = s.sizeUnit || 'px';
+            fontSizeMultiplier = (parseInt(s.fontSize) || 100) / 100;
+
+            // 更新UI
+            document.getElementById('sizeUnit').value = sizeUnit;
+            syncSizeInputs();
+
+            // 方向和位置
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(currentOrientation);
+            card.dataset.pos = currentPosition;
+            updatePositionButtons();
+            document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
+                e.classList.toggle('active', e.dataset.pos === currentPosition);
+            });
+
+            // 样式
+            document.querySelectorAll('.grid-btn[data-style]').forEach(e => {
+                e.classList.toggle('active', e.dataset.style === currentStyle);
+            });
+
+            // 主题色
+            document.documentElement.style.setProperty('--cal-theme', s.themeColor);
+            document.getElementById('customColor').value = s.themeColor;
+            document.querySelectorAll('.color-btn').forEach(e => {
+                e.classList.toggle('active', e.dataset.color === s.themeColor);
+            });
+
+            // 字体
+            document.getElementById('calendarFont').value = s.font;
+            document.documentElement.style.setProperty('--calendar-font', s.font);
+            updateFontDropdownSelection(s.font);
+
+            // 字体大小
+            document.getElementById('fontSizeSlider').value = s.fontSize;
+            document.getElementById('fontSizeValue').textContent = s.fontSize + '%';
+
+            // 底部文字
+            document.getElementById('footerText').value = s.footerText;
+            document.getElementById('cardFooter').textContent = s.footerText;
+
+            // 分隔线
+            const dividerToggle = document.getElementById('dividerToggle');
+            dividerToggle.checked = s.hasDivider || false;
+            if (s.dividerThickness) {
+                document.getElementById('dividerThickness').value = s.dividerThickness;
+                document.getElementById('dividerThicknessValue').textContent = s.dividerThickness + 'px';
+                document.documentElement.style.setProperty('--divider-thickness', s.dividerThickness + 'px');
+            }
+            toggleDivider();
+
+            applyCardSize();
+            autoFitPreview();
+            updateCalendar();
+
+            // 重置选择框
+            select.value = '';
+        }
+
+        function deleteSavedSettings() {
+            const select = document.getElementById('savedSettingsSelect');
+            const index = select.value;
+            if (index === '') {
+                alert('请先选择要删除的设置');
+                return;
+            }
+
+            const name = savedSettingsList[parseInt(index)].name;
+            if (confirm(`确定要删除设置"${name}"吗？`)) {
+                savedSettingsList.splice(parseInt(index), 1);
+                localStorage.setItem('calendarSavedSettings', JSON.stringify(savedSettingsList));
+                renderSavedSettingsSelect();
+            }
+        }
+
+        function updateSliders() {
+            // 滑块始终使用像素值
+            document.getElementById('widthSlider').value = cardWidth;
+            document.getElementById('heightSlider').value = cardHeight;
+        }
+
+        function updateFromSlider(type) {
+            // 滑块值是像素，直接设置
+            if (type === 'width') {
+                cardWidth = parseInt(document.getElementById('widthSlider').value);
+            } else {
+                cardHeight = parseInt(document.getElementById('heightSlider').value);
+            }
+            syncSizeInputs();
+            applyCardSize();
+        }
+
+        function changeFont() {
+            const font = document.getElementById('calendarFont').value;
+            document.documentElement.style.setProperty('--calendar-font', font);
+        }
+
+        function changeFontSize() {
+            const value = parseInt(document.getElementById('fontSizeSlider').value);
+            fontSizeMultiplier = value / 100;
+            document.getElementById('fontSizeValue').textContent = value + '%';
+            applyCardSize();
+        }
+
+        function updateFooter() {
+            document.getElementById('cardFooter').textContent = document.getElementById('footerText').value;
+        }
+
+        let lastWeekYear = 0, lastWeekMonth = 0;
+
+        function updateCalendar() {
+            const type = document.querySelector('.nav-tab.active').dataset.type;
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+
+            // 只在年月变化时才更新周选项，避免重置用户的周选择
+            if (type === 'week' && (year !== lastWeekYear || month !== lastWeekMonth)) {
+                updateWeekOptions(year, month);
+                lastWeekYear = year;
+                lastWeekMonth = month;
+            }
+
+            document.getElementById('yearMonthDisplay').textContent = `${year}年${month}月`;
+            if (currentStyle === 'full') {
+                try {
+                    const lunar = Lunar.fromDate(new Date(year, month - 1, 15));
+                    document.getElementById('lunarMonthDisplay').textContent = `${lunar.getYearInChinese()}年 ${lunar.getMonthInChinese()}月`;
+                } catch (e) { }
+            }
+
+            if (type === 'month') generateMonthCalendar(year, month);
+            else generateWeekCalendar(year, month, parseInt(document.getElementById('weekNumber').value) || 1);
+        }
+
+        function updateWeekOptions(year, month) {
+            const select = document.getElementById('weekNumber');
+            select.innerHTML = '';
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            let current = new Date(firstDay);
+            while (current.getDay() !== 1) current.setDate(current.getDate() - 1);
+            let wc = 0;
+            while (current <= lastDay || wc === 0) {
+                wc++;
+                const s = new Date(current);
+                const e = new Date(current);
+                e.setDate(e.getDate() + 6);
+                const opt = document.createElement('option');
+                opt.value = wc;
+                opt.textContent = `第${wc}周 (${s.getMonth() + 1}/${s.getDate()}-${e.getMonth() + 1}/${e.getDate()})`;
+                select.appendChild(opt);
+                current.setDate(current.getDate() + 7);
+                if (wc > 6) break;
+            }
+        }
+
+        function generateMonthCalendar(year, month) {
+            const grid = document.getElementById('calendarGrid');
+            let classes = 'month-grid';
+            if (currentStyle === 'solar') classes += ' solar-only';
+            if (currentStyle === 'note') classes += ' note-style';
+            grid.className = classes;
+            grid.innerHTML = '';
+
+            ['日', '一', '二', '三', '四', '五', '六'].forEach((d, i) => {
+                const h = document.createElement('div');
+                h.className = 'weekday-header' + (i === 0 || i === 6 ? ' weekend' : '');
+                h.textContent = d;
+                grid.appendChild(h);
+            });
+
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+            const prevLast = new Date(year, month - 1, 0).getDate();
+
+            for (let i = startDay - 1; i >= 0; i--) grid.appendChild(createDayCell(year, month - 1, prevLast - i, true));
+            for (let d = 1; d <= totalDays; d++) grid.appendChild(createDayCell(year, month, d, false));
+            const rem = 42 - (startDay + totalDays);
+            for (let d = 1; d <= rem; d++) grid.appendChild(createDayCell(year, month + 1, d, true));
+        }
+
+        function createDayCell(year, month, day, isOther) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (isOther) cell.classList.add('other-month');
+
+            let y = year, m = month;
+            if (m < 1) { y--; m = 12; }
+            if (m > 12) { y++; m = 1; }
+
+            const date = new Date(y, m - 1, day);
+            const dow = date.getDay();
+            if (dow === 0 || dow === 6) cell.classList.add('weekend');
+
+            const solar = document.createElement('div');
+            solar.className = 'solar';
+            solar.textContent = day;
+            cell.appendChild(solar);
+
+            if (currentStyle === 'full') {
+                try {
+                    const lunar = Lunar.fromDate(date);
+                    const ld = document.createElement('div');
+                    ld.className = 'lunar';
+                    const f = lunar.getFestivals();
+                    const jq = lunar.getJieQi();
+                    const sf = Solar.fromDate(date).getFestivals();
+                    if (sf.length) { ld.textContent = sf[0].substring(0, 3); ld.classList.add('festival'); }
+                    else if (f.length) { ld.textContent = f[0].substring(0, 3); ld.classList.add('festival'); }
+                    else if (jq) { ld.textContent = jq; ld.classList.add('jieqi'); }
+                    else if (lunar.getDay() === 1) { ld.textContent = lunar.getMonthInChinese() + '月'; }
+                    else { ld.textContent = lunar.getDayInChinese(); }
+                    cell.appendChild(ld);
+                } catch (e) { }
+            }
+
+            if (currentStyle === 'note' && !isOther) {
+                const inp = document.createElement('input');
+                inp.type = 'text';
+                inp.className = 'note-input';
+                inp.onclick = e => e.stopPropagation();
+                cell.appendChild(inp);
+            }
+
+            return cell;
+        }
+
+        function generateWeekCalendar(year, month, weekNum) {
+            const grid = document.getElementById('calendarGrid');
+            let classes = 'week-grid';
+            if (currentStyle === 'solar') classes += ' solar-only';
+            grid.className = classes;
+            grid.innerHTML = '';
+
+            const firstDay = new Date(year, month - 1, 1);
+            let current = new Date(firstDay);
+            while (current.getDay() !== 1) current.setDate(current.getDate() - 1);
+            current.setDate(current.getDate() + (weekNum - 1) * 7);
+
+            const names = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(current);
+                date.setDate(date.getDate() + i);
+                const row = document.createElement('div');
+                row.className = 'week-day-row';
+                const dow = date.getDay();
+                if (dow === 0 || dow === 6) row.classList.add('weekend');
+                row.innerHTML = `<div class="week-day-name">${names[i]}</div><div class="week-solar">${date.getDate()}</div>`;
+
+                if (currentStyle === 'full') {
+                    try {
+                        const lunar = Lunar.fromDate(date);
+                        let txt = lunar.getMonthInChinese() + '月' + lunar.getDayInChinese();
+                        const f = lunar.getFestivals();
+                        const jq = lunar.getJieQi();
+                        if (f.length) txt += ' · ' + f[0];
+                        else if (jq) txt += ' · ' + jq;
+                        row.innerHTML += `<div class="week-lunar">${txt}</div>`;
+                    } catch (e) { }
+                }
+                grid.appendChild(row);
+            }
+        }
+
+        function exportImage() {
+            const card = document.getElementById('calendarCard');
+            const container = document.getElementById('canvasContainer');
+            const format = document.getElementById('exportFormat').value;
+            const scale = parseInt(document.getElementById('exportScale').value);
+
+            const hint = card.querySelector('.image-hint');
+            const resizeHint = container.querySelector('.resize-hint');
+            if (hint) hint.style.display = 'none';
+            if (resizeHint) resizeHint.style.display = 'none';
+
+            document.querySelectorAll('.resize-handle').forEach(el => el.style.display = 'none');
+
+            // 临时移除预览缩放
+            const originalTransform = container.style.transform;
+            container.style.transform = 'none';
+
+            // 临时移除边框（边框仅用于预览）
+            card.style.setProperty('border', 'none', 'important');
+
+            // 获取实际渲染尺寸
+            const actualWidth = card.offsetWidth;
+            const actualHeight = card.offsetHeight;
+
+            // 等待重绘后再截图（双重RAF确保样式生效）
+            requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                html2canvas(card, {
+                    scale: scale,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: format === 'jpeg' ? '#ffffff' : null,
+                    width: actualWidth,
+                    height: actualHeight,
+                    windowWidth: actualWidth,
+                    windowHeight: actualHeight,
+                    logging: false,
+                    imageTimeout: 0,
+                    onclone: function(clonedDoc) {
+                        // 确保克隆的元素保持正确尺寸
+                        const clonedCard = clonedDoc.getElementById('calendarCard');
+                        if (clonedCard) {
+                            clonedCard.style.width = actualWidth + 'px';
+                            clonedCard.style.height = actualHeight + 'px';
+                            clonedCard.style.transform = 'none';
+                            clonedCard.style.border = 'none';
+                        }
+                        // 确保图片保持正确的transform
+                        const clonedImg = clonedDoc.querySelector('#imageSection img');
+                        const originalImg = document.querySelector('#imageSection img');
+                        if (clonedImg && originalImg) {
+                            clonedImg.style.cssText = originalImg.style.cssText;
+                            clonedImg.style.position = 'absolute';
+                            clonedImg.style.top = '50%';
+                            clonedImg.style.left = '50%';
+                            clonedImg.style.minWidth = '100%';
+                            clonedImg.style.minHeight = '100%';
+                            clonedImg.style.width = 'auto';
+                            clonedImg.style.height = 'auto';
+                        }
+                        // 确保图片区域尺寸正确
+                        const clonedImgSection = clonedDoc.getElementById('imageSection');
+                        const originalImgSection = document.getElementById('imageSection');
+                        if (clonedImgSection && originalImgSection) {
+                            clonedImgSection.style.width = originalImgSection.offsetWidth + 'px';
+                            clonedImgSection.style.height = originalImgSection.offsetHeight + 'px';
+                            clonedImgSection.style.flexShrink = '0';
+                        }
+                        // 确保日历区域尺寸正确
+                        const clonedCalSection = clonedDoc.getElementById('calendarSection');
+                        const originalCalSection = document.getElementById('calendarSection');
+                        if (clonedCalSection && originalCalSection) {
+                            clonedCalSection.style.width = originalCalSection.offsetWidth + 'px';
+                            clonedCalSection.style.height = originalCalSection.offsetHeight + 'px';
+                            clonedCalSection.style.flexShrink = '0';
+                        }
+                        // 确保背景图保持正确的transform
+                        const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
+                        const originalBgImg = document.querySelector('#bgLayer img');
+                        if (clonedBgImg && originalBgImg) {
+                            clonedBgImg.style.cssText = originalBgImg.style.cssText;
+                            clonedBgImg.style.position = 'absolute';
+                            clonedBgImg.style.top = '50%';
+                            clonedBgImg.style.left = '50%';
+                            clonedBgImg.style.minWidth = '100%';
+                            clonedBgImg.style.minHeight = '100%';
+                            clonedBgImg.style.width = 'auto';
+                            clonedBgImg.style.height = 'auto';
+                        }
+                    }
+                }).then(canvas => {
+                    // 恢复预览缩放和边框
+                    container.style.transform = originalTransform;
+                    card.style.removeProperty('border');
+                    if (hint) hint.style.display = '';
+                    if (resizeHint) resizeHint.style.display = '';
+                    document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
+
+                    const link = document.createElement('a');
+                    const y = document.getElementById('year').value;
+                    const m = document.getElementById('month').value;
+                    const pixelWidth = Math.round(actualWidth * scale);
+                    const pixelHeight = Math.round(actualHeight * scale);
+
+                    if (format === 'svg') {
+                        // SVG导出：将canvas转为PNG后嵌入SVG
+                        const dataUrl = canvas.toDataURL('image/png', 1.0);
+                        const svgContent = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + pixelWidth + '" height="' + pixelHeight + '" viewBox="0 0 ' + pixelWidth + ' ' + pixelHeight + '">\n  <image width="' + pixelWidth + '" height="' + pixelHeight + '" href="' + dataUrl + '"/>\n</svg>';
+                        const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+                        link.download = `日历_${y}年${m}月_${pixelWidth}x${pixelHeight}px.svg`;
+                        link.href = URL.createObjectURL(blob);
+                    } else {
+                        const ext = format === 'jpeg' ? 'jpg' : 'png';
+                        link.download = `日历_${y}年${m}月_${pixelWidth}x${pixelHeight}px.${ext}`;
+                        link.href = canvas.toDataURL(`image/${format}`, 1.0);
+                    }
+                    link.click();
+                }).catch(err => {
+                    console.error('导出失败:', err);
+                    alert('导出失败，请重试');
+                    // 恢复预览缩放和边框
+                    container.style.transform = originalTransform;
+                    card.style.removeProperty('border');
+                    if (hint) hint.style.display = '';
+                    if (resizeHint) resizeHint.style.display = '';
+                    document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
+                });
+            });
+            });
+        }
+
+        // ========== 撤回/前进功能 ==========
+        let historyStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 20;
+
+        function getCurrentState() {
+            return {
+                cardWidth,
+                cardHeight,
+                currentOrientation,
+                currentPosition,
+                currentStyle,
+                themeColor: getComputedStyle(document.documentElement).getPropertyValue('--cal-theme').trim(),
+                font: document.getElementById('calendarFont').value,
+                fontSize: document.getElementById('fontSizeSlider').value,
+                footerText: document.getElementById('footerText').value,
+                imgScale,
+                imgOffsetX,
+                imgOffsetY
+            };
+        }
+
+        function saveState() {
+            const state = getCurrentState();
+            if (historyStack.length > 0) {
+                const last = historyStack[historyStack.length - 1];
+                if (JSON.stringify(last) === JSON.stringify(state)) return;
+            }
+            historyStack.push(state);
+            if (historyStack.length > MAX_HISTORY) historyStack.shift();
+            redoStack = [];
+            updateUndoRedoButtons();
+        }
+
+        function restoreState(state) {
+            cardWidth = state.cardWidth;
+            cardHeight = state.cardHeight;
+            currentOrientation = state.currentOrientation;
+            currentPosition = state.currentPosition;
+            currentStyle = state.currentStyle;
+            imgScale = state.imgScale;
+            imgOffsetX = state.imgOffsetX;
+            imgOffsetY = state.imgOffsetY;
+            fontSizeMultiplier = (parseInt(state.fontSize) || 100) / 100;
+
+            syncSizeInputs();
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(currentOrientation);
+            card.dataset.pos = currentPosition;
+            updatePositionButtons();
+
+            document.querySelectorAll('.grid-btn[data-style]').forEach(e => {
+                e.classList.toggle('active', e.dataset.style === currentStyle);
+            });
+
+            document.documentElement.style.setProperty('--cal-theme', state.themeColor);
+            document.getElementById('customColor').value = state.themeColor;
+
+            document.getElementById('calendarFont').value = state.font;
+            document.documentElement.style.setProperty('--calendar-font', state.font);
+            updateFontDropdownSelection(state.font);
+
+            document.getElementById('fontSizeSlider').value = state.fontSize;
+            document.getElementById('fontSizeValue').textContent = state.fontSize + '%';
+
+            document.getElementById('footerText').value = state.footerText;
+            document.getElementById('cardFooter').textContent = state.footerText;
+
+            updateImageTransform();
+            applyCardSize();
+            updateCalendar();
+        }
+
+        function undo() {
+            if (historyStack.length <= 1) return;
+            const current = historyStack.pop();
+            redoStack.push(current);
+            const prev = historyStack[historyStack.length - 1];
+            restoreState(prev);
+            updateUndoRedoButtons();
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            const state = redoStack.pop();
+            historyStack.push(state);
+            restoreState(state);
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const undoBtn = document.getElementById('undoBtn');
+            const redoBtn = document.getElementById('redoBtn');
+            undoBtn.disabled = historyStack.length <= 1;
+            redoBtn.disabled = redoStack.length === 0;
+            undoBtn.style.opacity = undoBtn.disabled ? '0.4' : '1';
+            redoBtn.style.opacity = redoBtn.disabled ? '0.4' : '1';
+        }
+
+        // 包装函数以在操作后保存状态
+        const _changeRatio = changeRatio;
+        changeRatio = function(el) { _changeRatio(el); saveState(); };
+
+        const _changePosition = changePosition;
+        changePosition = function(el) { _changePosition(el); saveState(); };
+
+        const _changeStyle = changeStyle;
+        changeStyle = function(el) { _changeStyle(el); saveState(); };
+
+        const _changeTheme = changeTheme;
+        changeTheme = function(el) { _changeTheme(el); saveState(); };
+
+        const _changeFont = changeFont;
+        changeFont = function() { _changeFont(); saveState(); };
+
+        const _handleMouseUp = handleMouseUp;
+        handleMouseUp = function() {
+            const wasDragging = isDragging;
+            const wasResizing = isResizing;
+            _handleMouseUp();
+            if (wasDragging || wasResizing) saveState();
+        };
+
+        setTimeout(() => { saveState(); }, 200);
+    </script>
+</body>
+</html>
