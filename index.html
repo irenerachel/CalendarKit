@@ -189,9 +189,9 @@
         /* 右上角提示 */
         .tips-container {
             position: absolute;
-            top: 16px;
+            top: 21px;
             right: 30px;
-            font-size: 11px;
+            font-size: 12px;
             color: var(--primary-light);
             opacity: 0.5;
             transition: opacity 0.5s ease;
@@ -717,6 +717,38 @@
         }
         .settings-btn:hover { border-color: var(--primary); background: var(--yellow-light); }
         .settings-btn.delete:hover { background: #FEE2E2; border-color: #B91C1C; }
+
+        /* 快速模板区域 */
+        .quick-templates-section { margin-top: 8px; }
+        .quick-templates-row {
+            display: flex;
+            gap: 8px;
+        }
+        .template-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 8px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .template-btn:hover {
+            border-color: var(--primary);
+            background: var(--yellow-light);
+        }
+        .template-icon {
+            font-size: 20px;
+            color: var(--primary);
+        }
+        .template-name {
+            font-size: 10px;
+            color: var(--primary-light);
+        }
 
         /* 保存设置对话框 */
         .save-dialog-overlay {
@@ -1578,7 +1610,7 @@
                             <option value="天王星像素">天王星像素</option>
                         </select>
                     </div>
-                    <div style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:6px;">💡 切换字体后请稍等片刻，字体加载需要一点时间~</div>
+                    <div style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:6px;">💡 切换字体后稍等片刻~</div>
                 </div>
 
                 <div class="section">
@@ -1619,6 +1651,24 @@
                         <button class="settings-btn delete" onclick="deleteSavedSettings()" title="删除选中的设置">🗑️</button>
                     </div>
                     <div class="settings-tip">💡 保存设置后，12张月历/周历用同一个模板，尺寸风格都一致哦~</div>
+                </div>
+
+                <div class="section full-width quick-templates-section">
+                    <div class="section-title">✦ 快速模板</div>
+                    <div class="quick-templates-row">
+                        <button class="template-btn" onclick="applyQuickTemplate('horizontal')">
+                            <span class="template-icon">▭</span>
+                            <span class="template-name">横版</span>
+                        </button>
+                        <button class="template-btn" onclick="applyQuickTemplate('vertical')">
+                            <span class="template-icon">▯</span>
+                            <span class="template-name">竖版</span>
+                        </button>
+                        <button class="template-btn" onclick="applyQuickTemplate('minimal')">
+                            <span class="template-icon">☐</span>
+                            <span class="template-name">纯净</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -3132,6 +3182,54 @@
             localStorage.setItem('calendarSavedSettings', JSON.stringify(savedSettingsList));
             renderSavedSettingsSelect();
             closeSaveDialog();
+        }
+
+        function applyQuickTemplate(type) {
+            const card = document.getElementById('calendarCard');
+
+            if (type === 'horizontal') {
+                // 横版模板：16:9，图片在左
+                cardWidth = 640;
+                cardHeight = 360;
+                currentOrientation = 'horizontal';
+                currentPosition = 'left';
+                card.classList.remove('vertical');
+                card.classList.add('horizontal');
+                card.dataset.pos = 'left';
+                document.getElementById('footerText').value = '日历小助手';
+                document.getElementById('cardFooter').textContent = '日历小助手';
+            } else if (type === 'vertical') {
+                // 竖版模板：3:4，图片在下
+                cardWidth = 390;
+                cardHeight = 520;
+                currentOrientation = 'vertical';
+                currentPosition = 'bottom';
+                card.classList.remove('horizontal');
+                card.classList.add('vertical');
+                card.dataset.pos = 'bottom';
+                document.getElementById('footerText').value = '日历小助手';
+                document.getElementById('cardFooter').textContent = '日历小助手';
+            } else if (type === 'minimal') {
+                // 纯净模板：3:4，无图片，无底部文字
+                cardWidth = 390;
+                cardHeight = 520;
+                currentOrientation = 'vertical';
+                currentPosition = 'none';
+                card.classList.remove('horizontal');
+                card.classList.add('vertical');
+                card.dataset.pos = 'none';
+                document.getElementById('footerText').value = '';
+                document.getElementById('cardFooter').textContent = '';
+            }
+
+            updatePositionButtons();
+            document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
+                e.classList.toggle('active', e.dataset.pos === currentPosition);
+            });
+
+            syncSizeInputs();
+            applyCardSize();
+            autoFitPreview();
         }
 
         function loadSavedSettings() {
