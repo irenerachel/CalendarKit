@@ -309,6 +309,8 @@
         .control-panel::-webkit-scrollbar-track { background: transparent; }
         .control-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         .control-panel::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+        .control-panel { overflow-anchor: none; }
+        .control-panel * { overflow-anchor: none; scroll-margin: 0; scroll-padding: 0; }
 
         .panel-grid {
             display: grid;
@@ -2559,6 +2561,8 @@
                     updateImageSection();
                 };
                 opacityRow.style.display = 'flex';
+                // 确保不会因为焦点变化导致滚动
+                document.activeElement?.blur?.();
                 restoreScroll();
             } else {
                 const isTouchPlaceholder = 'ontouchstart' in window;
