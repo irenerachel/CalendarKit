@@ -3325,10 +3325,12 @@
         }
 
         function exportImage() {
+            console.log('开始导出...');
             const card = document.getElementById('calendarCard');
             const container = document.getElementById('canvasContainer');
             const format = document.getElementById('exportFormat').value;
             const scale = parseInt(document.getElementById('exportScale').value);
+            console.log('format:', format, 'scale:', scale);
 
             const hint = card.querySelector('.image-hint');
             const resizeHint = container.querySelector('.resize-hint');
@@ -3376,8 +3378,10 @@
             const actualHeight = card.offsetHeight;
 
             // 等待重绘后再截图（双重RAF确保样式生效）
+            console.log('准备调用html2canvas, 尺寸:', actualWidth, 'x', actualHeight, '是否周历:', isWeekMode);
             requestAnimationFrame(() => {
             requestAnimationFrame(() => {
+                console.log('进入RAF, 开始html2canvas');
                 html2canvas(card, {
                     scale: scale,
                     useCORS: true,
@@ -3506,6 +3510,7 @@
                       }
                     }
                 }).then(canvas => {
+                    console.log('html2canvas成功, canvas尺寸:', canvas.width, 'x', canvas.height);
                     // 恢复预览缩放和边框
                     container.style.transform = originalTransform;
                     card.style.removeProperty('border');
