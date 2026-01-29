@@ -333,7 +333,20 @@
 
         .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
         .form-row:last-child { margin-bottom: 0; }
-        .form-item { flex: 1; }
+        .form-item { flex: 1; display: flex; flex-direction: column; }
+        .date-section .form-item input[type="number"] {
+            height: 32px !important;
+            box-sizing: border-box;
+            padding: 0 8px;
+            line-height: 28px;
+        }
+        .date-section .sidebar-select-wrap .custom-select-trigger {
+            height: 32px !important;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
         .form-label { font-size: 9px; color: var(--primary-light); margin-bottom: 3px; display: block; }
         select, input[type="number"], input[type="text"] {
             width: 100%;
@@ -446,10 +459,13 @@
         /* 侧边栏下拉样式 */
         .sidebar-select-wrap { position: relative; width: 100%; }
         .sidebar-select-wrap .custom-select-trigger {
-            padding: 8px 12px;
-            font-size: 13px;
+            padding: 0 8px;
+            font-size: 12px;
             width: 100%;
             background: white;
+            height: 32px;
+            box-sizing: border-box;
+            line-height: 28px;
         }
         .sidebar-select-wrap .custom-select-dropdown {
             min-width: 100%;
@@ -976,6 +992,7 @@
             font-size: calc(12px * var(--cal-scale, 1));
         }
         .note-style .day-cell .lunar { display: none; }
+        .note-style .day-cell.other-month { visibility: hidden; }
         .note-style .day-cell .note-input {
             position: absolute;
             bottom: 1px;
@@ -991,6 +1008,11 @@
             padding: 0;
         }
         .note-style .calendar-header .lunar-month { display: none; }
+        .note-style .card-footer {
+            border: 1px solid color-mix(in srgb, var(--cal-theme) 30%, transparent);
+            padding: calc(5px * var(--cal-scale, 1));
+            margin-top: -1px;
+        }
 
         .card-footer {
             text-align: center;
@@ -1339,14 +1361,14 @@
             <div class="panel-grid">
                 <div class="section date-section">
                     <div class="section-title">✦ 日期</div>
-                    <div style="display:flex;gap:8px;align-items:flex-end;">
+                    <div style="display:flex;gap:8px;">
                         <div class="form-item" style="flex:1;">
-                            <input type="number" id="year" min="1900" max="2100" onchange="updateCalendar()">
+                            <input type="number" id="year" min="1900" max="2100" onchange="updateCalendar()" style="height:32px;box-sizing:border-box;">
                         </div>
                         <div class="form-item" style="flex:1;">
                             <select id="month" style="display:none;"></select>
                             <div class="custom-select-wrap sidebar-select-wrap" id="monthSelectWrap">
-                                <div class="custom-select-trigger" id="monthSelectTrigger" onclick="toggleMonthDropdown()">
+                                <div class="custom-select-trigger" id="monthSelectTrigger" onclick="toggleMonthDropdown()" style="height:32px;box-sizing:border-box;display:flex;align-items:center;">
                                     <span id="monthSelectText">1月</span>
                                     <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
                                 </div>
@@ -1356,7 +1378,7 @@
                         <div class="form-item" id="weekSelector" style="display:none;flex:1.5;">
                             <select id="weekNumber" style="display:none;"></select>
                             <div class="custom-select-wrap sidebar-select-wrap" id="weekSelectWrap">
-                                <div class="custom-select-trigger" id="weekSelectTrigger" onclick="toggleWeekDropdown()">
+                                <div class="custom-select-trigger" id="weekSelectTrigger" onclick="toggleWeekDropdown()" style="height:32px;box-sizing:border-box;display:flex;align-items:center;">
                                     <span id="weekSelectText">第1周</span>
                                     <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
                                 </div>
@@ -1369,7 +1391,8 @@
                 <div class="section full-width">
                     <div class="section-title">✦ 比例</div>
                     <div class="pill-group">
-                                                <button class="pill-btn" data-ratio="16:9" data-orient="horizontal" onclick="changeRatio(this)">16:9</button>
+                                                <button class="pill-btn" data-ratio="2:1" data-orient="horizontal" onclick="changeRatio(this)">2:1</button>
+                        <button class="pill-btn" data-ratio="16:9" data-orient="horizontal" onclick="changeRatio(this)">16:9</button>
                         <button class="pill-btn" data-ratio="4:3" data-orient="horizontal" onclick="changeRatio(this)">4:3</button>
                         <button class="pill-btn" data-ratio="3:2" data-orient="horizontal" onclick="changeRatio(this)">3:2</button>
                         <button class="pill-btn" data-ratio="1:1" data-orient="vertical" onclick="changeRatio(this)">1:1</button>
@@ -1406,7 +1429,7 @@
                         <button class="pill-btn" data-pos="none" onclick="changePosition(this)">无图</button>
                     </div>
                     <div class="img-opacity-row" id="imgOpacityRow" style="display:none;margin-top:8px;">
-                        <span style="font-size:9px;color:var(--primary-light);white-space:nowrap;">透明</span>
+                        <span style="font-size:9px;color:var(--primary-light);white-space:nowrap;">透明度</span>
                         <input type="range" id="imgOpacitySlider" min="10" max="100" value="100" style="flex:1;accent-color:var(--primary);" oninput="changeImgOpacity()">
                         <span id="imgOpacityValue" style="font-size:9px;min-width:28px;text-align:right;">100%</span>
                     </div>
@@ -1500,6 +1523,7 @@
                             <option value="天王星像素">天王星像素</option>
                         </select>
                     </div>
+                    <div style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:6px;">💡 切换字体后请稍等片刻，字体加载需要一点时间~</div>
                 </div>
 
                 <div class="section">
@@ -2924,12 +2948,29 @@
             const dropdown = document.getElementById('settingsSelectDropdown');
             if (dropdown) {
                 dropdown.innerHTML = '<div class="custom-select-option settings-placeholder" data-value="" onclick="selectSettingsOption(\'\', \'\')">选择已保存的设置...</div>' +
+                    '<div class="custom-select-option" style="color:var(--primary);border-bottom:1px solid #eee;" onclick="showSaveSettingsDialog()">💾 保存当前设置</div>' +
                     savedSettingsList.map((s, i) =>
                         `<div class="custom-select-option" data-value="${i}" onclick="selectSettingsOption('${i}', '${s.name.replace(/'/g, "\\'")}')">${s.name}</div>`
-                    ).join('');
+                    ).join('') +
+                    '<div class="custom-select-option" style="color:#e74c3c;border-top:1px solid #eee;" onclick="deleteCurrentSettings()">🗑️ 删除当前模板</div>';
             }
             // 重置显示文字
             document.getElementById('settingsSelectText').textContent = '选择已保存的设置...';
+        }
+
+        function deleteCurrentSettings() {
+            const select = document.getElementById('savedSettingsSelect');
+            const index = select.value;
+            if (index === '') {
+                alert('请先选择一个模板');
+                return;
+            }
+            const name = savedSettingsList[parseInt(index)].name;
+            if (confirm('确定要删除模板「' + name + '」吗？')) {
+                savedSettingsList.splice(parseInt(index), 1);
+                localStorage.setItem('calendarSavedSettings', JSON.stringify(savedSettingsList));
+                renderSavedSettingsSelect();
+            }
         }
 
         function showSaveSettingsDialog() {
@@ -2948,6 +2989,13 @@
             const name = document.getElementById('settingsName').value.trim();
             if (!name) {
                 alert('请输入设置名称');
+                return;
+            }
+
+            // 检查是否重名
+            const isDuplicate = savedSettingsList.some(s => s.name === name);
+            if (isDuplicate) {
+                alert('该名称已存在，请使用其他名称');
                 return;
             }
 
@@ -3311,7 +3359,7 @@
                     height: actualHeight,
                     windowWidth: actualWidth,
                     windowHeight: actualHeight,
-                    logging: false,
+                    logging: true,
                     imageTimeout: 0,
                     onclone: function(clonedDoc) {
                         // 确保克隆的元素保持正确尺寸
@@ -3351,18 +3399,70 @@
                             clonedCalSection.style.height = originalCalSection.offsetHeight + 'px';
                             clonedCalSection.style.flexShrink = '0';
                         }
-                        // 确保背景图保持正确的transform
+                        // 确保背景图保持正确的transform和尺寸
                         const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
                         const originalBgImg = document.querySelector('#bgLayer img');
                         if (clonedBgImg && originalBgImg) {
+                            const originalStyle = getComputedStyle(originalBgImg);
                             clonedBgImg.style.cssText = originalBgImg.style.cssText;
-                            clonedBgImg.style.position = 'absolute';
-                            clonedBgImg.style.top = '50%';
-                            clonedBgImg.style.left = '50%';
-                            clonedBgImg.style.minWidth = '100%';
-                            clonedBgImg.style.minHeight = '100%';
-                            clonedBgImg.style.width = 'auto';
-                            clonedBgImg.style.height = 'auto';
+                            // 保持计算后的实际尺寸
+                            clonedBgImg.style.width = originalBgImg.offsetWidth + 'px';
+                            clonedBgImg.style.height = originalBgImg.offsetHeight + 'px';
+                            clonedBgImg.style.minWidth = 'unset';
+                            clonedBgImg.style.minHeight = 'unset';
+                        }
+                        // 确保bgLayer尺寸正确
+                        const clonedBgLayer = clonedDoc.getElementById('bgLayer');
+                        const originalBgLayer = document.getElementById('bgLayer');
+                        if (clonedBgLayer && originalBgLayer) {
+                            clonedBgLayer.style.width = originalBgLayer.offsetWidth + 'px';
+                            clonedBgLayer.style.height = originalBgLayer.offsetHeight + 'px';
+                        }
+                        // 处理color-mix兼容性问题（html2canvas不支持color-mix）
+                        const clonedWeekRows = clonedDoc.querySelectorAll('.week-day-row');
+                        const originalWeekRows = document.querySelectorAll('.week-day-row');
+                        clonedWeekRows.forEach((row, i) => {
+                            if (originalWeekRows[i]) {
+                                row.style.background = getComputedStyle(originalWeekRows[i]).backgroundColor;
+                                row.style.height = originalWeekRows[i].offsetHeight + 'px';
+                                row.style.flex = 'none';
+                            }
+                        });
+                        // 确保周历grid正确渲染
+                        const clonedWeekGrid = clonedDoc.querySelector('.week-grid');
+                        const originalWeekGrid = document.querySelector('.week-grid');
+                        if (clonedWeekGrid && originalWeekGrid) {
+                            clonedWeekGrid.style.height = originalWeekGrid.offsetHeight + 'px';
+                            clonedWeekGrid.style.flex = 'none';
+                        }
+                        // 处理note样式的边框
+                        const clonedDayCells = clonedDoc.querySelectorAll('.day-cell');
+                        const originalDayCells = document.querySelectorAll('.day-cell');
+                        clonedDayCells.forEach((cell, i) => {
+                            if (originalDayCells[i]) {
+                                cell.style.border = getComputedStyle(originalDayCells[i]).border;
+                            }
+                        });
+                        const clonedWeekdayHeaders = clonedDoc.querySelectorAll('.weekday-header');
+                        const originalWeekdayHeaders = document.querySelectorAll('.weekday-header');
+                        clonedWeekdayHeaders.forEach((h, i) => {
+                            if (originalWeekdayHeaders[i]) {
+                                h.style.borderBottom = getComputedStyle(originalWeekdayHeaders[i]).borderBottom;
+                            }
+                        });
+                        const clonedFooter = clonedDoc.querySelector('.card-footer');
+                        const originalFooter = document.querySelector('.card-footer');
+                        if (clonedFooter && originalFooter) {
+                            clonedFooter.style.border = getComputedStyle(originalFooter).border;
+                        }
+                        // 处理日历分隔线
+                        const clonedGrid = clonedDoc.getElementById('calendarGrid');
+                        const originalGrid = document.getElementById('calendarGrid');
+                        if (clonedGrid && originalGrid) {
+                            const originalBefore = getComputedStyle(originalGrid, '::before');
+                            if (originalBefore.content !== 'none') {
+                                clonedGrid.style.setProperty('--divider-bg', originalBefore.backgroundColor);
+                            }
                         }
                     }
                 }).then(canvas => {
