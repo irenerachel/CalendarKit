@@ -3488,14 +3488,15 @@
                         if (clonedFooter && originalFooter) {
                             clonedFooter.style.border = getComputedStyle(originalFooter).border;
                         }
-                        // 处理日历分隔线
+                        // 处理日历分隔线 - 使用实际的div替代伪元素
                         const clonedGrid = clonedDoc.getElementById('calendarGrid');
                         const originalGrid = document.getElementById('calendarGrid');
-                        if (clonedGrid && originalGrid) {
-                            const originalBefore = getComputedStyle(originalGrid, '::before');
-                            if (originalBefore.content !== 'none') {
-                                clonedGrid.style.setProperty('--divider-bg', originalBefore.backgroundColor);
-                            }
+                        if (clonedGrid && originalGrid && originalGrid.parentElement.classList.contains('has-divider')) {
+                            const originalBefore = getComputedStyle(originalGrid.parentElement, '::before');
+                            // 创建一个真实的div来替代伪元素
+                            const divider = clonedDoc.createElement('div');
+                            divider.style.cssText = `position:absolute;top:0;left:0;right:0;height:${originalBefore.height};background:${originalBefore.backgroundColor};`;
+                            clonedGrid.parentElement.insertBefore(divider, clonedGrid.parentElement.firstChild);
                         }
                         // 处理:has()选择器兼容性 - 周历时calendar-header需要更大margin
                         if (clonedGrid && clonedGrid.classList.contains('week-grid')) {
