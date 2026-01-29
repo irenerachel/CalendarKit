@@ -1047,6 +1047,7 @@
         .calendar-card.has-bg .image-section { background: transparent; }
 
         .calendar-header { text-align: center; margin-bottom: calc(24px * var(--cal-scale, 1)); padding-top: calc(12px * var(--cal-scale, 1)); }
+        .compact-header .calendar-header { margin-bottom: calc(12px * var(--cal-scale, 1)); }
         .calendar-section.has-divider .month-grid,
         .calendar-section.has-divider .week-grid {
             position: relative;
@@ -1601,6 +1602,10 @@
                         <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
                             <input type="checkbox" id="hideOtherMonth" onchange="updateCalendar()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
                             隐藏非当月
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
+                            <input type="checkbox" id="compactHeader" onchange="toggleCompactHeader()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
+                            缩短标题间距
                         </label>
                     </div>
                 </div>
@@ -3022,6 +3027,16 @@
             }
         }
 
+        function toggleCompactHeader() {
+            const section = document.querySelector('.calendar-section');
+            const checked = document.getElementById('compactHeader').checked;
+            if (checked) {
+                section.classList.add('compact-header');
+            } else {
+                section.classList.remove('compact-header');
+            }
+        }
+
         function updateDividerThickness() {
             const value = document.getElementById('dividerThickness').value;
             document.getElementById('dividerThicknessValue').textContent = value + 'px';
@@ -3243,7 +3258,8 @@
                 sizeUnit: sizeUnit,
                 hasDivider: document.getElementById('dividerToggle').checked,
                 dividerThickness: document.getElementById('dividerThickness').value,
-                hideOtherMonth: document.getElementById('hideOtherMonth').checked
+                hideOtherMonth: document.getElementById('hideOtherMonth').checked,
+                compactHeader: document.getElementById('compactHeader').checked
             };
 
             savedSettingsList.unshift(settings);
@@ -3359,6 +3375,9 @@
 
             document.getElementById('hideOtherMonth').checked = s.hideOtherMonth || false;
 
+            document.getElementById('compactHeader').checked = s.compactHeader || false;
+            toggleCompactHeader();
+
             applyCardSize();
             autoFitPreview();
             updateCalendar();
@@ -3407,7 +3426,8 @@
                 fs: document.getElementById('fontSizeSlider').value,
                 ft: document.getElementById('footerText').value,
                 bo: document.getElementById('bgOpacitySlider').value,
-                ho: document.getElementById('hideOtherMonth').checked ? 1 : 0
+                ho: document.getElementById('hideOtherMonth').checked ? 1 : 0,
+                ch: document.getElementById('compactHeader').checked ? 1 : 0
             };
             const encoded = btoa(encodeURIComponent(JSON.stringify(settings)));
             const url = window.location.origin + window.location.pathname + '?s=' + encoded;
@@ -3488,6 +3508,10 @@
 
                 // 隐藏非当月
                 document.getElementById('hideOtherMonth').checked = settings.ho === 1;
+
+                // 缩短标题间距
+                document.getElementById('compactHeader').checked = settings.ch === 1;
+                toggleCompactHeader();
 
                 updatePositionButtons();
                 document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
