@@ -3262,7 +3262,10 @@
             };
 
             const templateName = templateNames[type];
+            console.log('查找模板:', templateName);
+            console.log('已保存的模板:', savedSettingsList.map(s => s.name));
             const s = savedSettingsList.find(item => item.name === templateName);
+            console.log('找到:', s ? s.name : '未找到');
 
             if (s) {
                 // 找到了用户保存的模板，应用完整设置
