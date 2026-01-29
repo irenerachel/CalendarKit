@@ -3767,17 +3767,6 @@
                 if (match) previewScale = parseFloat(match[1]);
             }
 
-            // 在移除缩放前记录背景图的尺寸（因为背景图有min-width:100%，移除缩放后尺寸会变）
-            const bgImgForExport = document.querySelector('#bgLayer img');
-            const bgLayerForExport = document.getElementById('bgLayer');
-            let savedBgImgW = 0, savedBgImgH = 0, savedBgLayerW = 0, savedBgLayerH = 0;
-            if (bgImgForExport && bgLayerForExport) {
-                savedBgImgW = bgImgForExport.offsetWidth;
-                savedBgImgH = bgImgForExport.offsetHeight;
-                savedBgLayerW = bgLayerForExport.offsetWidth;
-                savedBgLayerH = bgLayerForExport.offsetHeight;
-            }
-
             // 临时移除预览缩放
             container.style.transform = 'none';
 
@@ -3876,15 +3865,20 @@
                             clonedCalSection.style.height = originalCalSection.offsetHeight + 'px';
                             clonedCalSection.style.flexShrink = '0';
                         }
-                        // 确保背景图保持正确的尺寸和位置（用固定像素值）
+                        // 确保背景图保持正确的尺寸和位置
                         const clonedBgLayer = clonedDoc.getElementById('bgLayer');
                         const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
-                        if (clonedBgLayer && savedBgLayerW > 0) {
-                            // 使用预先记录的尺寸（移除缩放前的尺寸）
-                            clonedBgLayer.style.width = savedBgLayerW + 'px';
-                            clonedBgLayer.style.height = savedBgLayerH + 'px';
-                            // 关键修复：html2canvas不支持CSS变量，需要显式设置计算后的opacity值
-                            const computedOpacity = getComputedStyle(bgLayerForExport).opacity;
+                        const originalBgLayer = document.getElementById('bgLayer');
+                        const originalBgImg = document.querySelector('#bgLayer img');
+
+                        if (clonedBgLayer && originalBgLayer) {
+                            // 设置背景层尺寸
+                            const layerW = originalBgLayer.offsetWidth;
+                            const layerH = originalBgLayer.offsetHeight;
+                            clonedBgLayer.style.width = layerW + 'px';
+                            clonedBgLayer.style.height = layerH + 'px';
+                            // html2canvas不支持CSS变量，需要显式设置opacity值
+                            const computedOpacity = getComputedStyle(originalBgLayer).opacity;
                             clonedBgLayer.style.opacity = computedOpacity;
                         }
                         // 隐藏背景提示文字
@@ -3892,38 +3886,18 @@
                         if (clonedBgHint) {
                             clonedBgHint.style.display = 'none';
                         }
-                        if (clonedBgImg && savedBgImgW > 0) {
-                            // 使用预先记录的尺寸（移除预览缩放前的真实显示尺寸）
-                            const layerW = savedBgLayerW;
-                            const layerH = savedBgLayerH;
-                            const baseW = savedBgImgW;
-                            const baseH = savedBgImgH;
-
-                            // 最终渲染尺寸 = 基础尺寸 * bgScale
-                            const finalW = baseW * bgScale;
-                            const finalH = baseH * bgScale;
-
-                            // 原始定位: top:50%, left:50% + transform: translate(-50%+offsetX, -50%+offsetY) scale(bgScale)
-                            // 转换为绝对定位:
-                            // 1. 图片中心在 layer 的 50%, 50% 位置
-                            // 2. 然后偏移 bgOffsetX, bgOffsetY（也需要根据预览缩放调整）
-                            const adjustedOffsetX = bgOffsetX;
-                            const adjustedOffsetY = bgOffsetY;
-                            // 所以图片左上角 = (layerW/2 - finalW/2 + offsetX, layerH/2 - finalH/2 + offsetY)
-                            const finalX = layerW / 2 - finalW / 2 + adjustedOffsetX;
-                            const finalY = layerH / 2 - finalH / 2 + adjustedOffsetY;
-
-                            clonedBgImg.style.cssText = `
-                                position: absolute;
-                                left: ${finalX}px;
-                                top: ${finalY}px;
-                                width: ${finalW}px;
-                                height: ${finalH}px;
-                                min-width: unset;
-                                min-height: unset;
-                                transform: none;
-                                transform-origin: unset;
-                            `;
+                        if (clonedBgImg && originalBgImg) {
+                            // 直接复制原始图片的计算样式
+                            const cs = getComputedStyle(originalBgImg);
+                            clonedBgImg.style.position = 'absolute';
+                            clonedBgImg.style.top = cs.top;
+                            clonedBgImg.style.left = cs.left;
+                            clonedBgImg.style.width = cs.width;
+                            clonedBgImg.style.height = cs.height;
+                            clonedBgImg.style.minWidth = cs.minWidth;
+                            clonedBgImg.style.minHeight = cs.minHeight;
+                            clonedBgImg.style.transform = cs.transform;
+                            clonedBgImg.style.transformOrigin = cs.transformOrigin;
                         }
                         // 处理color-mix兼容性问题（html2canvas不支持color-mix）
                         const clonedWeekRows = clonedDoc.querySelectorAll('.week-day-row');
