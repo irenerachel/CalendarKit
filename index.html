@@ -2806,7 +2806,7 @@
                 if (currentBgSrc && e.altKey) {
                     e.preventDefault();
                     const delta = e.deltaY > 0 ? -0.02 : 0.02;
-                    bgScale = Math.max(0.5, Math.min(5, bgScale + delta));
+                    bgScale = Math.max(0.1, Math.min(5, bgScale + delta));
                     updateBgTransform();
                 }
             }, { passive: false });
