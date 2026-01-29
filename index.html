@@ -3344,20 +3344,26 @@
             // 临时移除边框（边框仅用于预览）
             card.style.setProperty('border', 'none', 'important');
 
-            // 周历导出前：临时固定尺寸和样式，避免flex布局和color-mix问题
-            const weekGrid = document.querySelector('.week-grid');
-            const weekRows = document.querySelectorAll('.week-day-row');
-            const calHeader = document.querySelector('.calendar-header');
+            // 判断是否是周历
+            const isWeekMode = document.querySelector('.nav-tab.active').dataset.type === 'week';
+
+            // 周历导出前：临时固定尺寸和样式
             let weekGridOriginalStyle = '';
             let weekRowsOriginalStyles = [];
             let calHeaderOriginalStyle = '';
-            if (weekGrid) {
+            const weekGrid = isWeekMode ? document.querySelector('.week-grid') : null;
+            const weekRows = isWeekMode ? document.querySelectorAll('.week-day-row') : [];
+            const calHeader = isWeekMode ? document.querySelector('.calendar-header') : null;
+
+            if (isWeekMode && weekGrid) {
                 weekGridOriginalStyle = weekGrid.style.cssText;
-                weekGrid.style.cssText = `height:${weekGrid.offsetHeight}px;flex:none;display:flex;flex-direction:column;gap:${getComputedStyle(weekGrid).gap};`;
+                weekGrid.style.height = weekGrid.offsetHeight + 'px';
+                weekGrid.style.flex = 'none';
                 weekRows.forEach((row, i) => {
                     weekRowsOriginalStyles[i] = row.style.cssText;
-                    const cs = getComputedStyle(row);
-                    row.style.cssText = `height:${row.offsetHeight}px;flex:none;display:flex;align-items:center;padding:${cs.padding};background:${cs.backgroundColor};gap:${cs.gap};border-radius:${cs.borderRadius};`;
+                    row.style.height = row.offsetHeight + 'px';
+                    row.style.flex = 'none';
+                    row.style.background = getComputedStyle(row).backgroundColor;
                 });
                 if (calHeader) {
                     calHeaderOriginalStyle = calHeader.style.cssText;
@@ -3507,7 +3513,7 @@
                     if (resizeHint) resizeHint.style.display = '';
                     document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
                     // 恢复周历样式
-                    if (weekGrid) {
+                    if (isWeekMode && weekGrid) {
                         weekGrid.style.cssText = weekGridOriginalStyle;
                         weekRows.forEach((row, i) => {
                             row.style.cssText = weekRowsOriginalStyles[i] || '';
@@ -3544,7 +3550,7 @@
                     if (resizeHint) resizeHint.style.display = '';
                     document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
                     // 恢复周历样式
-                    if (weekGrid) {
+                    if (isWeekMode && weekGrid) {
                         weekGrid.style.cssText = weekGridOriginalStyle;
                         weekRows.forEach((row, i) => {
                             row.style.cssText = weekRowsOriginalStyles[i] || '';
