@@ -610,6 +610,7 @@
         .upload-box img { max-width: 100%; max-height: 40px; border-radius: 4px; }
         .upload-actions { display: flex; gap: 4px; margin-top: 6px; justify-content: center; }
         .bg-opacity-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .img-opacity-row { display: flex; gap: 8px; align-items: center; }
 
         /* 设置保存区域 */
         .settings-save-section { margin-top: auto; }
@@ -1402,6 +1403,11 @@
                         <button class="pill-btn" data-pos="top" onclick="changePosition(this)">图上</button>
                         <button class="pill-btn active" data-pos="bottom" onclick="changePosition(this)">图下</button>
                         <button class="pill-btn" data-pos="none" onclick="changePosition(this)">无图</button>
+                    </div>
+                    <div class="img-opacity-row" id="imgOpacityRow" style="display:none;margin-top:8px;">
+                        <span style="font-size:10px;color:var(--primary-light);">图片透明度</span>
+                        <input type="range" id="imgOpacitySlider" min="10" max="100" value="100" style="flex:1;accent-color:var(--primary);" oninput="changeImgOpacity()">
+                        <span id="imgOpacityValue" style="font-size:10px;min-width:32px;text-align:right;">100%</span>
                     </div>
                 </div>
 
@@ -2479,12 +2485,21 @@
 
         function updateImageSection() {
             const section = document.getElementById('imageSection');
+            const opacityRow = document.getElementById('imgOpacityRow');
             if (currentImageSrc) {
                 const isTouchDevice = 'ontouchstart' in window;
                 const hintText = isTouchDevice ? '拖动移动 · 双指缩放 · 双击删除' : '拖拽移动 · 滚轮缩放 · 双击删除';
                 section.innerHTML = `<img src="${currentImageSrc}"><div class="image-hint">${hintText}</div>`;
                 // 延迟更新transform，确保DOM已渲染
-                setTimeout(() => updateImageTransform(), 0);
+                setTimeout(() => {
+                    updateImageTransform();
+                    // 应用当前透明度
+                    const img = document.querySelector('#imageSection img');
+                    if (img) {
+                        const opacity = parseInt(document.getElementById('imgOpacitySlider').value) / 100;
+                        img.style.opacity = opacity;
+                    }
+                }, 0);
                 section.ondblclick = () => {
                     currentImageSrc = null;
                     imgScale = 1;
@@ -2493,11 +2508,13 @@
                     originalImageSize = { width: 0, height: 0 };
                     updateImageSection();
                 };
+                opacityRow.style.display = 'flex';
             } else {
                 const isTouchPlaceholder = 'ontouchstart' in window;
                 const subText = isTouchPlaceholder ? '拖动移动 · 双指缩放' : '拖拽移动 · 滚轮缩放';
                 section.innerHTML = `<div class="placeholder"><div class="icon">🖼️</div><div>点击上传图片</div><div class="sub">${subText}</div></div>`;
                 section.ondblclick = null;
+                opacityRow.style.display = 'none';
             }
             initImageSection();
         }
@@ -2585,6 +2602,15 @@
             const value = parseInt(document.getElementById('bgOpacitySlider').value);
             document.getElementById('bgOpacityValue').textContent = value + '%';
             document.documentElement.style.setProperty('--bg-opacity', value / 100);
+        }
+
+        function changeImgOpacity() {
+            const value = parseInt(document.getElementById('imgOpacitySlider').value);
+            document.getElementById('imgOpacityValue').textContent = value + '%';
+            const img = document.querySelector('#imageSection img');
+            if (img) {
+                img.style.opacity = value / 100;
+            }
         }
 
         function updateBgUploadArea() {
