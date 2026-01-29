@@ -3345,6 +3345,23 @@
             // 临时移除边框（边框仅用于预览）
             card.style.setProperty('border', 'none', 'important');
 
+            // 周历导出前：临时固定尺寸，避免flex布局问题
+            const weekGrid = document.querySelector('.week-grid');
+            const weekRows = document.querySelectorAll('.week-day-row');
+            let weekGridOriginalStyle = '';
+            let weekRowsOriginalStyles = [];
+            if (weekGrid) {
+                weekGridOriginalStyle = weekGrid.style.cssText;
+                weekGrid.style.height = weekGrid.offsetHeight + 'px';
+                weekGrid.style.flex = 'none';
+                weekRows.forEach((row, i) => {
+                    weekRowsOriginalStyles[i] = row.style.cssText;
+                    row.style.height = row.offsetHeight + 'px';
+                    row.style.flex = 'none';
+                    row.style.background = getComputedStyle(row).backgroundColor;
+                });
+            }
+
             // 获取实际渲染尺寸
             const actualWidth = card.offsetWidth;
             const actualHeight = card.offsetHeight;
@@ -3486,6 +3503,13 @@
                     if (hint) hint.style.display = '';
                     if (resizeHint) resizeHint.style.display = '';
                     document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
+                    // 恢复周历样式
+                    if (weekGrid) {
+                        weekGrid.style.cssText = weekGridOriginalStyle;
+                        weekRows.forEach((row, i) => {
+                            row.style.cssText = weekRowsOriginalStyles[i] || '';
+                        });
+                    }
 
                     const link = document.createElement('a');
                     const y = document.getElementById('year').value;
@@ -3515,6 +3539,13 @@
                     if (hint) hint.style.display = '';
                     if (resizeHint) resizeHint.style.display = '';
                     document.querySelectorAll('.resize-handle').forEach(el => el.style.display = '');
+                    // 恢复周历样式
+                    if (weekGrid) {
+                        weekGrid.style.cssText = weekGridOriginalStyle;
+                        weekRows.forEach((row, i) => {
+                            row.style.cssText = weekRowsOriginalStyles[i] || '';
+                        });
+                    }
                 });
             });
             });
