@@ -3344,21 +3344,25 @@
             // 临时移除边框（边框仅用于预览）
             card.style.setProperty('border', 'none', 'important');
 
-            // 周历导出前：临时固定尺寸，避免flex布局问题
+            // 周历导出前：临时固定尺寸和样式，避免flex布局和color-mix问题
             const weekGrid = document.querySelector('.week-grid');
             const weekRows = document.querySelectorAll('.week-day-row');
+            const calHeader = document.querySelector('.calendar-header');
             let weekGridOriginalStyle = '';
             let weekRowsOriginalStyles = [];
+            let calHeaderOriginalStyle = '';
             if (weekGrid) {
                 weekGridOriginalStyle = weekGrid.style.cssText;
-                weekGrid.style.height = weekGrid.offsetHeight + 'px';
-                weekGrid.style.flex = 'none';
+                weekGrid.style.cssText = `height:${weekGrid.offsetHeight}px;flex:none;display:flex;flex-direction:column;gap:${getComputedStyle(weekGrid).gap};`;
                 weekRows.forEach((row, i) => {
                     weekRowsOriginalStyles[i] = row.style.cssText;
-                    row.style.height = row.offsetHeight + 'px';
-                    row.style.flex = 'none';
-                    row.style.background = getComputedStyle(row).backgroundColor;
+                    const cs = getComputedStyle(row);
+                    row.style.cssText = `height:${row.offsetHeight}px;flex:none;display:flex;align-items:center;padding:${cs.padding};background:${cs.backgroundColor};gap:${cs.gap};border-radius:${cs.borderRadius};`;
                 });
+                if (calHeader) {
+                    calHeaderOriginalStyle = calHeader.style.cssText;
+                    calHeader.style.marginBottom = getComputedStyle(calHeader).marginBottom;
+                }
             }
 
             // 获取实际渲染尺寸
@@ -3508,6 +3512,7 @@
                         weekRows.forEach((row, i) => {
                             row.style.cssText = weekRowsOriginalStyles[i] || '';
                         });
+                        if (calHeader) calHeader.style.cssText = calHeaderOriginalStyle;
                     }
 
                     const link = document.createElement('a');
@@ -3544,6 +3549,7 @@
                         weekRows.forEach((row, i) => {
                             row.style.cssText = weekRowsOriginalStyles[i] || '';
                         });
+                        if (calHeader) calHeader.style.cssText = calHeaderOriginalStyle;
                     }
                 });
             });
