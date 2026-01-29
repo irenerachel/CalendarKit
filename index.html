@@ -798,6 +798,54 @@
         }
         .save-dialog-btns .cancel { background: white; color: var(--primary); }
         .save-dialog-btns .confirm { background: var(--primary); color: white; }
+
+        /* 通用提示弹窗 */
+        .toast-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .toast-overlay.show { display: flex; }
+        .toast-dialog {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 320px;
+            text-align: center;
+        }
+        .toast-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .toast-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .toast-message {
+            font-size: 12px;
+            color: var(--primary-light);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .toast-btn {
+            padding: 10px 32px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+        .toast-btn:hover { opacity: 0.9; }
+
         .upload-actions button {
             padding: 3px 10px; font-size: 9px; border: 2px solid var(--primary);
             border-radius: 50px; cursor: pointer; font-weight: 600;
@@ -1443,6 +1491,16 @@
                     <button class="cancel" onclick="closeSaveDialog()">取消</button>
                     <button class="confirm" onclick="confirmSaveSettings()">保存</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 通用提示弹窗 -->
+        <div class="toast-overlay" id="toastOverlay" onclick="closeToast()">
+            <div class="toast-dialog" onclick="event.stopPropagation()">
+                <div class="toast-icon" id="toastIcon">🔗</div>
+                <div class="toast-title" id="toastTitle">分享链接已复制！</div>
+                <div class="toast-message" id="toastMessage">朋友打开即可使用相同设置~<br>（图片需另外发送哦）</div>
+                <button class="toast-btn" onclick="closeToast()">好的</button>
             </div>
         </div>
 
@@ -3356,11 +3414,22 @@
 
             // 复制到剪贴板
             navigator.clipboard.writeText(url).then(() => {
-                alert('分享链接已复制！\n\n朋友打开即可使用相同设置~\n（图片需另外发送哦）');
+                showToast('🔗', '分享链接已复制！', '朋友打开即可使用相同设置~<br>（图片需另外发送哦）');
             }).catch(() => {
                 // 如果clipboard API不可用，显示链接让用户手动复制
-                prompt('复制以下链接分享给朋友（图片需另外发送）：', url);
+                showToast('🔗', '请复制分享链接', '<input type="text" value="' + url + '" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:11px;margin-top:8px;" onclick="this.select()" readonly>');
             });
+        }
+
+        function showToast(icon, title, message) {
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').innerHTML = message;
+            document.getElementById('toastOverlay').classList.add('show');
+        }
+
+        function closeToast() {
+            document.getElementById('toastOverlay').classList.remove('show');
         }
 
         function loadSettingsFromUrl() {
