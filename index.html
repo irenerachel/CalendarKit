@@ -825,6 +825,7 @@
         .image-section.has-bg { background: transparent; }
         .image-section.drag-over { outline: 3px dashed var(--primary); outline-offset: -4px; }
         .image-section.dragging { cursor: grabbing; }
+        .calendar-card.drag-over-bg { outline: 3px dashed var(--pink); outline-offset: -3px; }
         .image-section img {
             position: absolute;
             top: 50%; left: 50%;
@@ -2538,6 +2539,28 @@
                     updateBgTransform();
                 }
             }, { passive: false });
+
+            // 拖拽图片到日历区域自动作为背景图
+            card.addEventListener('dragover', (e) => {
+                // 如果拖到图片区域，让图片区域处理
+                if (e.target.closest('#imageSection')) return;
+                e.preventDefault();
+                card.classList.add('drag-over-bg');
+            });
+            card.addEventListener('dragleave', (e) => {
+                if (!card.contains(e.relatedTarget)) {
+                    card.classList.remove('drag-over-bg');
+                }
+            });
+            card.addEventListener('drop', (e) => {
+                // 如果拖到图片区域，让图片区域处理
+                if (e.target.closest('#imageSection')) return;
+                e.preventDefault();
+                card.classList.remove('drag-over-bg');
+                if (e.dataTransfer.files.length && e.dataTransfer.files[0].type.startsWith('image/')) {
+                    processFile(e.dataTransfer.files[0], 'bg');
+                }
+            });
         }
 
         function changeBgOpacity() {
