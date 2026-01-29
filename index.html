@@ -3735,8 +3735,15 @@
 
             document.querySelectorAll('.resize-handle').forEach(el => el.style.display = 'none');
 
-            // 临时移除预览缩放
+            // 获取预览缩放比例（用于后面补偿字体大小）
             const originalTransform = container.style.transform;
+            let previewScale = 1;
+            if (originalTransform) {
+                const match = originalTransform.match(/scale\(([\d.]+)\)/);
+                if (match) previewScale = parseFloat(match[1]);
+            }
+
+            // 临时移除预览缩放
             container.style.transform = 'none';
 
             // 临时移除边框（边框仅用于预览）
@@ -3798,6 +3805,14 @@
                             clonedCard.style.height = actualHeight + 'px';
                             clonedCard.style.transform = 'none';
                             clonedCard.style.border = 'none';
+                        }
+                        // 补偿预览缩放：调整 --cal-scale 使导出字体大小与预览一致
+                        const clonedCalSection = clonedDoc.getElementById('calendarSection');
+                        const originalCalSection = document.getElementById('calendarSection');
+                        if (clonedCalSection && originalCalSection && previewScale < 1) {
+                            const currentScale = parseFloat(getComputedStyle(originalCalSection).getPropertyValue('--cal-scale')) || 1;
+                            const adjustedScale = currentScale * previewScale;
+                            clonedCalSection.style.setProperty('--cal-scale', adjustedScale.toFixed(3));
                         }
                         // 确保图片保持正确的transform
                         const clonedImg = clonedDoc.querySelector('#imageSection img');
