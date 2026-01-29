@@ -1050,6 +1050,7 @@
             border-radius: 3px;
         }
         .day-cell.other-month { opacity: 0.15; }
+        .hide-other-month .day-cell.other-month { visibility: hidden; }
         .day-cell.weekend { color: var(--pink); }
         .day-cell .solar { font-size: calc(12px * var(--cal-scale, 1)); font-weight: 600; color: var(--cal-theme); }
         .day-cell .lunar { font-size: calc(7px * var(--cal-scale, 1)); color: var(--cal-theme); opacity: 0.5; margin-top: calc(1px * var(--cal-scale, 1)); }
@@ -1539,6 +1540,10 @@
                             <input type="range" id="dividerThickness" min="1" max="4" value="1" step="0.5" style="width:50px;accent-color:var(--primary);" oninput="updateDividerThickness()">
                             <span id="dividerThicknessValue" style="font-size:9px;color:var(--primary-light);min-width:24px;">1px</span>
                         </div>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
+                            <input type="checkbox" id="hideOtherMonth" onchange="updateCalendar()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
+                            隐藏非当月
+                        </label>
                     </div>
                 </div>
 
@@ -3179,7 +3184,8 @@
                 footerText: document.getElementById('footerText').value,
                 sizeUnit: sizeUnit,
                 hasDivider: document.getElementById('dividerToggle').checked,
-                dividerThickness: document.getElementById('dividerThickness').value
+                dividerThickness: document.getElementById('dividerThickness').value,
+                hideOtherMonth: document.getElementById('hideOtherMonth').checked
             };
 
             savedSettingsList.unshift(settings);
@@ -3304,6 +3310,9 @@
             }
             toggleDivider();
 
+            // 隐藏非当月
+            document.getElementById('hideOtherMonth').checked = s.hideOtherMonth || false;
+
             applyCardSize();
             autoFitPreview();
             updateCalendar();
@@ -3339,7 +3348,8 @@
                 f: document.getElementById('calendarFont').value,
                 fs: document.getElementById('fontSizeSlider').value,
                 ft: document.getElementById('footerText').value,
-                bo: document.getElementById('bgOpacitySlider').value
+                bo: document.getElementById('bgOpacitySlider').value,
+                ho: document.getElementById('hideOtherMonth').checked ? 1 : 0
             };
             const encoded = btoa(encodeURIComponent(JSON.stringify(settings)));
             const url = window.location.origin + window.location.pathname + '?s=' + encoded;
@@ -3406,6 +3416,9 @@
                     document.getElementById('bgOpacityValue').textContent = settings.bo + '%';
                     document.documentElement.style.setProperty('--bg-opacity', settings.bo / 100);
                 }
+
+                // 隐藏非当月
+                document.getElementById('hideOtherMonth').checked = settings.ho === 1;
 
                 updatePositionButtons();
                 document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
@@ -3532,6 +3545,7 @@
             let classes = 'month-grid';
             if (currentStyle === 'solar') classes += ' solar-only';
             if (currentStyle === 'note') classes += ' note-style';
+            if (document.getElementById('hideOtherMonth').checked) classes += ' hide-other-month';
             grid.className = classes;
             grid.innerHTML = '';
 
