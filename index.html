@@ -961,9 +961,9 @@
         .solar-only .calendar-header .lunar-month { display: none; }
 
         .note-style .month-grid { gap: 0; }
-        .note-style .weekday-header { border-bottom: 1px solid var(--border); padding: 3px 0; }
+        .note-style .weekday-header { border-bottom: 1px solid color-mix(in srgb, var(--cal-theme) 30%, transparent); padding: 3px 0; }
         .note-style .day-cell {
-            border: 1px solid var(--border);
+            border: 1px solid color-mix(in srgb, var(--cal-theme) 30%, transparent);
             border-radius: 0;
             padding: 0;
             align-items: flex-start;
@@ -975,7 +975,7 @@
             position: absolute;
             top: calc(2px * var(--cal-scale, 1));
             left: calc(3px * var(--cal-scale, 1));
-            font-size: calc(10px * var(--cal-scale, 1));
+            font-size: calc(12px * var(--cal-scale, 1));
         }
         .note-style .day-cell .lunar { display: none; }
         .note-style .day-cell .note-input {
