@@ -3317,6 +3317,7 @@
                 syncSizeInputs();
                 applyCardSize();
                 autoFitPreview();
+                updateCalendar();
             }
         }
 
@@ -3860,8 +3861,6 @@
                             clonedImgSection.style.flexShrink = '0';
                         }
                         // 确保日历区域尺寸正确
-                        const clonedCalSection = clonedDoc.getElementById('calendarSection');
-                        const originalCalSection = document.getElementById('calendarSection');
                         if (clonedCalSection && originalCalSection) {
                             clonedCalSection.style.width = originalCalSection.offsetWidth + 'px';
                             clonedCalSection.style.height = originalCalSection.offsetHeight + 'px';
