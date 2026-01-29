@@ -144,29 +144,47 @@
             top: 12px;
             left: 15px;
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
-            background: white;
-            padding: 8px 14px;
-            border-radius: 10px;
-            border: 2px solid var(--border);
-            font-size: 12px;
+            background: rgba(255,255,255,0.95);
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 11px;
             z-index: 10;
+            flex-wrap: nowrap;
         }
         .size-controls label {
             color: var(--primary-light);
             font-weight: 500;
+            font-size: 11px;
+            white-space: nowrap;
         }
         .size-controls input[type="number"] {
-            width: 70px;
-            padding: 5px 8px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            font-size: 12px;
+            width: 58px;
+            padding: 4px 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
             text-align: center;
         }
         .size-controls input:focus { border-color: var(--primary); outline: none; }
-        .size-controls span { color: var(--primary-light); }
+        .size-controls span { color: var(--primary-light); font-size: 10px; }
+        /* 预设尺寸下拉紧凑样式 */
+        .size-controls .export-select-wrap .custom-select-trigger {
+            padding: 4px 8px;
+            font-size: 10px;
+            min-width: auto;
+            border: 1px solid var(--border);
+        }
+        .size-controls .export-select-wrap .custom-select-dropdown {
+            font-size: 10px;
+        }
+        .size-controls .export-select-wrap .custom-select-option {
+            padding: 6px 10px;
+            font-size: 10px;
+        }
 
         /* 右上角提示 */
         .tips-container {
@@ -1250,11 +1268,11 @@
                         <div class="custom-select-option" data-value="cm">cm</div>
                     </div>
                 </div>
-                <button onclick="resetToDefault()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:14px;cursor:pointer;color:var(--primary);" title="恢复默认设置">↺</button>
-                <button onclick="saveCurrentSize()" style="padding:4px 10px;border:2px solid var(--border);border-radius:6px;background:var(--yellow-light);font-size:11px;cursor:pointer;color:var(--primary);" title="保存当前尺寸">💾</button>
-                <span style="border-left:1px solid var(--border);height:20px;margin:0 4px;"></span>
-                <button id="undoBtn" onclick="undo()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:12px;cursor:pointer;color:var(--primary);opacity:0.4;" title="撤回上一步" disabled>←</button>
-                <button id="redoBtn" onclick="redo()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:12px;cursor:pointer;color:var(--primary);opacity:0.4;" title="重做下一步" disabled>→</button>
+                <button onclick="resetToDefault()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:white;font-size:12px;cursor:pointer;color:var(--primary);" title="恢复默认设置">↺</button>
+                <button onclick="saveCurrentSize()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--yellow-light);font-size:10px;cursor:pointer;color:var(--primary);" title="保存当前尺寸">💾</button>
+                <span style="border-left:1px solid var(--border);height:16px;margin:0 2px;"></span>
+                <button id="undoBtn" onclick="undo()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:white;font-size:10px;cursor:pointer;color:var(--primary);opacity:0.4;" title="撤回上一步" disabled>←</button>
+                <button id="redoBtn" onclick="redo()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:white;font-size:10px;cursor:pointer;color:var(--primary);opacity:0.4;" title="重做下一步" disabled>→</button>
                 <div class="size-history" id="sizeHistory"></div>
                 <div class="size-slider" id="widthSliderWrap">
                     <span>宽</span>
