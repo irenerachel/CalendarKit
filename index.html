@@ -1611,6 +1611,10 @@
                             <input type="checkbox" id="useTraditional" onchange="updateCalendar()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
                             繁体中文
                         </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
+                            <input type="checkbox" id="mondayFirst" onchange="updateCalendar()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
+                            周一起始
+                        </label>
                     </div>
                 </div>
 
@@ -3287,7 +3291,8 @@
                 dividerThickness: document.getElementById('dividerThickness').value,
                 hideOtherMonth: document.getElementById('hideOtherMonth').checked,
                 compactHeader: document.getElementById('compactHeader').checked,
-                useTraditional: document.getElementById('useTraditional').checked
+                useTraditional: document.getElementById('useTraditional').checked,
+                mondayFirst: document.getElementById('mondayFirst').checked
             };
 
             savedSettingsList.unshift(settings);
@@ -3408,6 +3413,7 @@
             toggleCompactHeader();
 
             document.getElementById('useTraditional').checked = s.useTraditional || false;
+            document.getElementById('mondayFirst').checked = s.mondayFirst || false;
 
             applyCardSize();
             autoFitPreview();
@@ -3458,7 +3464,8 @@
                 bo: document.getElementById('bgOpacitySlider').value,
                 ho: document.getElementById('hideOtherMonth').checked ? 1 : 0,
                 ch: document.getElementById('compactHeader').checked ? 1 : 0,
-                tc: document.getElementById('useTraditional').checked ? 1 : 0
+                tc: document.getElementById('useTraditional').checked ? 1 : 0,
+                mf: document.getElementById('mondayFirst').checked ? 1 : 0
             };
             const encoded = btoa(encodeURIComponent(JSON.stringify(settings)));
             const url = window.location.origin + window.location.pathname + '?s=' + encoded;
@@ -3546,6 +3553,9 @@
 
                 // 繁体中文
                 document.getElementById('useTraditional').checked = settings.tc === 1;
+
+                // 周一起始
+                document.getElementById('mondayFirst').checked = settings.mf === 1;
 
                 updatePositionButtons();
                 document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
@@ -3676,16 +3686,22 @@
             grid.className = classes;
             grid.innerHTML = '';
 
-            ['日', '一', '二', '三', '四', '五', '六'].forEach((d, i) => {
+            const mondayFirst = document.getElementById('mondayFirst').checked;
+            const weekdays = mondayFirst ? ['一', '二', '三', '四', '五', '六', '日'] : ['日', '一', '二', '三', '四', '五', '六'];
+            weekdays.forEach((d, i) => {
                 const h = document.createElement('div');
-                h.className = 'weekday-header' + (i === 0 || i === 6 ? ' weekend' : '');
+                const isWeekend = mondayFirst ? (i === 5 || i === 6) : (i === 0 || i === 6);
+                h.className = 'weekday-header' + (isWeekend ? ' weekend' : '');
                 h.textContent = d;
                 grid.appendChild(h);
             });
 
             const firstDay = new Date(year, month - 1, 1);
             const lastDay = new Date(year, month, 0);
-            const startDay = firstDay.getDay();
+            let startDay = firstDay.getDay();
+            if (mondayFirst) {
+                startDay = startDay === 0 ? 6 : startDay - 1; // 周日变成6，其他减1
+            }
             const totalDays = lastDay.getDate();
             const prevLast = new Date(year, month - 1, 0).getDate();
 
