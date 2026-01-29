@@ -1952,6 +1952,8 @@
             };
 
             section.onmousedown = (e) => {
+                // 按住 Alt 键时跳过图片拖拽，让背景拖拽处理
+                if (e.altKey) return;
                 if (currentImageSrc && e.button === 0) {
                     isDragging = true;
                     dragStartX = e.clientX;
@@ -2020,6 +2022,8 @@
             }, { passive: false });
 
             section.onwheel = (e) => {
+                // 按住 Alt 键时跳过图片缩放，让背景缩放处理
+                if (e.altKey) return;
                 if (currentImageSrc) {
                     e.preventDefault();
                     const delta = e.deltaY > 0 ? -0.02 : 0.02;
