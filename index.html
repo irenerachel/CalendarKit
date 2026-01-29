@@ -3394,9 +3394,8 @@
 
             applySettingsObject(s);
 
-            // 重置选择框
-            select.value = '';
-            document.getElementById('settingsSelectText').textContent = '选择已保存的设置...';
+            // 保持选中状态，让用户可以删除
+            document.getElementById('settingsSelectText').textContent = s.name;
         }
 
         function deleteSavedSettings() {
