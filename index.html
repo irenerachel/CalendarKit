@@ -1295,7 +1295,7 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="nav-brand">Calendar Studio</div>
+        <div class="nav-brand"><img src="favicon.svg" alt="logo" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">Calendar Studio</div>
         <div class="nav-center">
             <button class="nav-tab active" data-type="month" onclick="changeType(this)">月历</button>
             <button class="nav-tab" data-type="week" onclick="changeType(this)">周历</button>
@@ -3779,19 +3779,28 @@
                             clonedBgHint.style.display = 'none';
                         }
                         if (clonedBgImg && originalBgImg && originalBgLayer) {
-                            // 用getBoundingClientRect获取实际渲染的位置和尺寸
-                            const layerRect = originalBgLayer.getBoundingClientRect();
-                            const imgRect = originalBgImg.getBoundingClientRect();
-                            // 计算相对于bgLayer的位置
-                            const relLeft = imgRect.left - layerRect.left;
-                            const relTop = imgRect.top - layerRect.top;
-                            // 完全用固定像素值，不用任何百分比或calc
+                            // 直接使用存储的偏移和缩放值计算位置
+                            const layerW = originalBgLayer.offsetWidth;
+                            const layerH = originalBgLayer.offsetHeight;
+                            const imgNaturalW = originalBgImg.naturalWidth;
+                            const imgNaturalH = originalBgImg.naturalHeight;
+
+                            // 计算图片在bgScale下的实际尺寸
+                            // 背景图默认是cover模式，先计算基础缩放
+                            const coverScale = Math.max(layerW / imgNaturalW, layerH / imgNaturalH);
+                            const scaledW = imgNaturalW * coverScale * bgScale;
+                            const scaledH = imgNaturalH * coverScale * bgScale;
+
+                            // 计算居中后加上偏移的位置
+                            const centerX = (layerW - scaledW) / 2 + bgOffsetX;
+                            const centerY = (layerH - scaledH) / 2 + bgOffsetY;
+
                             clonedBgImg.style.cssText = `
                                 position: absolute;
-                                left: ${relLeft}px;
-                                top: ${relTop}px;
-                                width: ${imgRect.width}px;
-                                height: ${imgRect.height}px;
+                                left: ${centerX}px;
+                                top: ${centerY}px;
+                                width: ${scaledW}px;
+                                height: ${scaledH}px;
                                 min-width: unset;
                                 min-height: unset;
                                 transform: none;
