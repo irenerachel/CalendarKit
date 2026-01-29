@@ -124,10 +124,12 @@
         .main-layout {
             display: flex;
             height: calc(100vh - 60px);
+            overflow: hidden;
         }
 
         .preview-area {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -187,7 +189,7 @@
         /* 右上角提示 */
         .tips-container {
             position: absolute;
-            top: 22px;
+            top: 16px;
             right: 30px;
             font-size: 11px;
             color: var(--primary-light);
@@ -291,15 +293,22 @@
         }
 
         .control-panel {
-            width: 480px;
+            width: 480px !important;
+            min-width: 480px !important;
+            max-width: 480px !important;
+            flex: 0 0 480px !important;
             background: white;
             border-left: 2px solid var(--primary);
-            padding: 16px 20px;
+            padding: 16px 20px !important;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow-y: scroll;
             box-sizing: border-box;
         }
+        .control-panel::-webkit-scrollbar { width: 6px; }
+        .control-panel::-webkit-scrollbar-track { background: transparent; }
+        .control-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .control-panel::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
 
         .panel-grid {
             display: grid;
@@ -1043,7 +1052,7 @@
         /* 平板适配 */
         @media (max-width: 1000px) {
             .main-layout { flex-direction: column-reverse; height: auto; overflow: auto; }
-            .control-panel { width: 100%; border-left: none; border-top: 2px solid var(--primary); max-height: 50vh; overflow-y: auto; }
+            .control-panel { width: 100% !important; min-width: 100% !important; max-width: 100% !important; flex: 0 0 auto !important; border-left: none; border-top: 2px solid var(--primary); max-height: 50vh; overflow-y: auto; }
             .preview-area { min-height: 350px; }
             body { overflow: auto; }
         }
@@ -1065,8 +1074,11 @@
 
             .main-layout { flex-direction: column-reverse; }
             .control-panel {
-                width: 100%;
-                padding: 12px;
+                width: 100% !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 auto !important;
+                padding: 12px !important;
                 max-height: 55vh;
             }
             .panel-grid {
@@ -2514,6 +2526,9 @@
         function updateImageSection() {
             const section = document.getElementById('imageSection');
             const opacityRow = document.getElementById('imgOpacityRow');
+            // 记录当前滚动位置
+            const panel = document.querySelector('.control-panel');
+            const scrollTop = panel ? panel.scrollTop : 0;
             if (currentImageSrc) {
                 const isTouchDevice = 'ontouchstart' in window;
                 const hintText = isTouchDevice ? '拖动移动 · 双指缩放 · 双击删除' : '拖拽移动 · 滚轮缩放 · 双击删除';
@@ -2545,6 +2560,10 @@
                 opacityRow.style.display = 'none';
             }
             initImageSection();
+            // 恢复滚动位置，防止自动滚动
+            if (panel) {
+                setTimeout(() => { panel.scrollTop = scrollTop; }, 0);
+            }
         }
 
         function updateImageTransform() {
@@ -2575,6 +2594,14 @@
             const img = document.querySelector('#bgLayer img');
             if (img) {
                 img.style.transform = `translate(calc(-50% + ${bgOffsetX}px), calc(-50% + ${bgOffsetY}px)) scale(${bgScale})`;
+                // 当缩放小于1时，移除min-width/min-height限制，允许图片变小
+                if (bgScale < 1) {
+                    img.style.minWidth = 'unset';
+                    img.style.minHeight = 'unset';
+                } else {
+                    img.style.minWidth = '100%';
+                    img.style.minHeight = '100%';
+                }
             }
         }
 
@@ -3458,19 +3485,36 @@
                             clonedCalSection.style.height = originalCalSection.offsetHeight + 'px';
                             clonedCalSection.style.flexShrink = '0';
                         }
-                        // 确保背景图保持正确的transform和尺寸
-                        const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
-                        const originalBgImg = document.querySelector('#bgLayer img');
-                        if (clonedBgImg && originalBgImg) {
-                            // 只复制transform，保持原有的尺寸设置
-                            clonedBgImg.style.transform = originalBgImg.style.transform || getComputedStyle(originalBgImg).transform;
-                        }
-                        // 确保bgLayer尺寸正确
+                        // 确保背景图保持正确的尺寸和位置（用固定像素值）
                         const clonedBgLayer = clonedDoc.getElementById('bgLayer');
                         const originalBgLayer = document.getElementById('bgLayer');
+                        const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
+                        const originalBgImg = document.querySelector('#bgLayer img');
                         if (clonedBgLayer && originalBgLayer) {
-                            clonedBgLayer.style.width = originalBgLayer.offsetWidth + 'px';
-                            clonedBgLayer.style.height = originalBgLayer.offsetHeight + 'px';
+                            const layerW = originalBgLayer.offsetWidth;
+                            const layerH = originalBgLayer.offsetHeight;
+                            clonedBgLayer.style.width = layerW + 'px';
+                            clonedBgLayer.style.height = layerH + 'px';
+                        }
+                        if (clonedBgImg && originalBgImg && originalBgLayer) {
+                            // 用getBoundingClientRect获取实际渲染的位置和尺寸
+                            const layerRect = originalBgLayer.getBoundingClientRect();
+                            const imgRect = originalBgImg.getBoundingClientRect();
+                            // 计算相对于bgLayer的位置
+                            const relLeft = imgRect.left - layerRect.left;
+                            const relTop = imgRect.top - layerRect.top;
+                            // 完全用固定像素值，不用任何百分比或calc
+                            clonedBgImg.style.cssText = `
+                                position: absolute;
+                                left: ${relLeft}px;
+                                top: ${relTop}px;
+                                width: ${imgRect.width}px;
+                                height: ${imgRect.height}px;
+                                min-width: unset;
+                                min-height: unset;
+                                transform: none;
+                                transform-origin: unset;
+                            `;
                         }
                         // 处理color-mix兼容性问题（html2canvas不支持color-mix）
                         const clonedWeekRows = clonedDoc.querySelectorAll('.week-day-row');
