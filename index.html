@@ -3848,28 +3848,31 @@
                             clonedBgHint.style.display = 'none';
                         }
                         if (clonedBgImg && originalBgImg && originalBgLayer) {
-                            // 直接使用存储的偏移和缩放值计算位置
                             const layerW = originalBgLayer.offsetWidth;
                             const layerH = originalBgLayer.offsetHeight;
-                            const imgNaturalW = originalBgImg.naturalWidth;
-                            const imgNaturalH = originalBgImg.naturalHeight;
 
-                            // 计算图片在bgScale下的实际尺寸
-                            // 背景图默认是cover模式，先计算基础缩放
-                            const coverScale = Math.max(layerW / imgNaturalW, layerH / imgNaturalH);
-                            const scaledW = imgNaturalW * coverScale * bgScale;
-                            const scaledH = imgNaturalH * coverScale * bgScale;
+                            // offsetWidth/Height 是应用 transform 之前的尺寸
+                            const baseW = originalBgImg.offsetWidth;
+                            const baseH = originalBgImg.offsetHeight;
 
-                            // 计算居中后加上偏移的位置
-                            const centerX = (layerW - scaledW) / 2 + bgOffsetX;
-                            const centerY = (layerH - scaledH) / 2 + bgOffsetY;
+                            // 最终渲染尺寸 = 基础尺寸 * bgScale
+                            const finalW = baseW * bgScale;
+                            const finalH = baseH * bgScale;
+
+                            // 原始定位: top:50%, left:50% + transform: translate(-50%+offsetX, -50%+offsetY) scale(bgScale)
+                            // 转换为绝对定位:
+                            // 1. 图片中心在 layer 的 50%, 50% 位置
+                            // 2. 然后偏移 bgOffsetX, bgOffsetY
+                            // 所以图片左上角 = (layerW/2 - finalW/2 + bgOffsetX, layerH/2 - finalH/2 + bgOffsetY)
+                            const finalX = layerW / 2 - finalW / 2 + bgOffsetX;
+                            const finalY = layerH / 2 - finalH / 2 + bgOffsetY;
 
                             clonedBgImg.style.cssText = `
                                 position: absolute;
-                                left: ${centerX}px;
-                                top: ${centerY}px;
-                                width: ${scaledW}px;
-                                height: ${scaledH}px;
+                                left: ${finalX}px;
+                                top: ${finalY}px;
+                                width: ${finalW}px;
+                                height: ${finalH}px;
                                 min-width: unset;
                                 min-height: unset;
                                 transform: none;
