@@ -717,6 +717,7 @@
         }
         .settings-btn:hover { border-color: var(--primary); background: var(--yellow-light); }
         .settings-btn.delete:hover { background: #FEE2E2; border-color: #B91C1C; }
+        .settings-btn.share:hover { background: #DBEAFE; border-color: #2563EB; }
 
         /* 快速模板区域 */
         .quick-templates-section { margin-top: 12px; }
@@ -1647,8 +1648,9 @@
                                 <option value="">选择已保存的设置...</option>
                             </select>
                         </div>
-                        <button class="settings-btn save" onclick="showSaveSettingsDialog()" title="在这里保存设置哦~">💾</button>
+                        <button class="settings-btn save" onclick="showSaveSettingsDialog()" title="保存当前设置">💾</button>
                         <button class="settings-btn delete" onclick="deleteSavedSettings()" title="删除选中的设置">🗑️</button>
+                        <button class="settings-btn share" onclick="shareSettings()" title="生成分享链接">🔗</button>
                     </div>
                     <div class="settings-tip">💡 保存设置后，12张月历/周历用同一个模板，尺寸风格都一致哦~</div>
                 </div>
@@ -1778,6 +1780,9 @@
             renderSavedSettingsSelect();
             updatePresetOptions();
             setTimeout(autoFitPreview, 100);
+
+            // 加载分享链接中的设置
+            setTimeout(loadSettingsFromUrl, 150);
 
             // 轮播提示
             initTipsRotation();
@@ -3320,6 +3325,106 @@
                 savedSettingsList.splice(parseInt(index), 1);
                 localStorage.setItem('calendarSavedSettings', JSON.stringify(savedSettingsList));
                 renderSavedSettingsSelect();
+            }
+        }
+
+        function shareSettings() {
+            const settings = {
+                w: cardWidth,
+                h: cardHeight,
+                o: currentOrientation,
+                p: currentPosition,
+                s: currentStyle,
+                c: getComputedStyle(document.documentElement).getPropertyValue('--cal-theme').trim(),
+                f: document.getElementById('calendarFont').value,
+                fs: document.getElementById('fontSizeSlider').value,
+                ft: document.getElementById('footerText').value,
+                bo: document.getElementById('bgOpacitySlider').value
+            };
+            const encoded = btoa(encodeURIComponent(JSON.stringify(settings)));
+            const url = window.location.origin + window.location.pathname + '?s=' + encoded;
+
+            // 复制到剪贴板
+            navigator.clipboard.writeText(url).then(() => {
+                alert('分享链接已复制到剪贴板！\n\n发给朋友打开即可使用相同设置~');
+            }).catch(() => {
+                // 如果clipboard API不可用，显示链接让用户手动复制
+                prompt('复制以下链接分享给朋友：', url);
+            });
+        }
+
+        function loadSettingsFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('s');
+            if (!encoded) return;
+
+            try {
+                const settings = JSON.parse(decodeURIComponent(atob(encoded)));
+
+                // 应用设置
+                cardWidth = settings.w || 390;
+                cardHeight = settings.h || 520;
+                currentOrientation = settings.o || 'vertical';
+                currentPosition = settings.p || 'bottom';
+                currentStyle = settings.s || 'full';
+
+                const card = document.getElementById('calendarCard');
+                card.classList.remove('horizontal', 'vertical');
+                card.classList.add(currentOrientation);
+                card.dataset.pos = currentPosition;
+
+                // 主题色
+                if (settings.c) {
+                    document.documentElement.style.setProperty('--cal-theme', settings.c);
+                    setThemeColorVariants(settings.c);
+                    updateHighlightColor(settings.c);
+                    document.getElementById('customColor').value = settings.c;
+                }
+
+                // 字体
+                if (settings.f) {
+                    document.getElementById('calendarFont').value = settings.f;
+                    document.documentElement.style.setProperty('--calendar-font', settings.f);
+                    updateFontDropdownSelection(settings.f);
+                }
+
+                // 字体大小
+                if (settings.fs) {
+                    document.getElementById('fontSizeSlider').value = settings.fs;
+                    document.getElementById('fontSizeValue').textContent = settings.fs + '%';
+                }
+
+                // 底部文字
+                if (settings.ft !== undefined) {
+                    document.getElementById('footerText').value = settings.ft;
+                    document.getElementById('cardFooter').textContent = settings.ft;
+                }
+
+                // 背景透明度
+                if (settings.bo) {
+                    document.getElementById('bgOpacitySlider').value = settings.bo;
+                    document.getElementById('bgOpacityValue').textContent = settings.bo + '%';
+                    document.documentElement.style.setProperty('--bg-opacity', settings.bo / 100);
+                }
+
+                updatePositionButtons();
+                document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
+                    e.classList.toggle('active', e.dataset.pos === currentPosition);
+                });
+                document.querySelectorAll('.grid-btn[data-style]').forEach(e => {
+                    e.classList.toggle('active', e.dataset.style === currentStyle);
+                });
+
+                syncSizeInputs();
+                applyCardSize();
+                autoFitPreview();
+                updateCalendar();
+
+                // 清除URL参数，避免刷新后重复加载
+                window.history.replaceState({}, '', window.location.pathname);
+
+            } catch(e) {
+                console.error('加载分享设置失败:', e);
             }
         }
 
