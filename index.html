@@ -2529,6 +2529,12 @@
             // 记录当前滚动位置
             const panel = document.querySelector('.control-panel');
             const scrollTop = panel ? panel.scrollTop : 0;
+
+            // 恢复滚动位置的函数
+            const restoreScroll = () => {
+                if (panel) panel.scrollTop = scrollTop;
+            };
+
             if (currentImageSrc) {
                 const isTouchDevice = 'ontouchstart' in window;
                 const hintText = isTouchDevice ? '拖动移动 · 双指缩放 · 双击删除' : '拖拽移动 · 滚轮缩放 · 双击删除';
@@ -2542,6 +2548,7 @@
                         const opacity = parseInt(document.getElementById('imgOpacitySlider').value) / 100;
                         img.style.opacity = opacity;
                     }
+                    restoreScroll();
                 }, 0);
                 section.ondblclick = () => {
                     currentImageSrc = null;
@@ -2552,6 +2559,7 @@
                     updateImageSection();
                 };
                 opacityRow.style.display = 'flex';
+                restoreScroll();
             } else {
                 const isTouchPlaceholder = 'ontouchstart' in window;
                 const subText = isTouchPlaceholder ? '拖动移动 · 双指缩放' : '拖拽移动 · 滚轮缩放';
@@ -2560,10 +2568,10 @@
                 opacityRow.style.display = 'none';
             }
             initImageSection();
-            // 恢复滚动位置，防止自动滚动
-            if (panel) {
-                setTimeout(() => { panel.scrollTop = scrollTop; }, 0);
-            }
+            // 多次恢复滚动位置，确保在所有DOM更新后生效
+            restoreScroll();
+            setTimeout(restoreScroll, 10);
+            setTimeout(restoreScroll, 50);
         }
 
         function updateImageTransform() {
