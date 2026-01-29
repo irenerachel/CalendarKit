@@ -171,12 +171,12 @@
         .size-controls .export-select-wrap .custom-select-trigger {
             padding: 5px 10px;
             font-size: 11px;
-            min-width: 140px;
+            min-width: 165px;
             border: 2px solid var(--border);
         }
         .size-controls .export-select-wrap .custom-select-dropdown {
             font-size: 11px;
-            min-width: 160px;
+            min-width: 180px;
         }
         .size-controls .export-select-wrap .custom-select-option {
             padding: 8px 12px;
@@ -1256,7 +1256,10 @@
                 <input type="number" id="widthInput" value="390" min="100" max="3000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('width')" onblur="hideSlider('width')">
                 <span>×</span>
                 <input type="number" id="heightInput" value="520" min="100" max="2000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('height')" onblur="hideSlider('height')">
-                <select id="sizeUnit" style="display:none;"></select>
+                <select id="sizeUnit" style="display:none;">
+                    <option value="px">px</option>
+                    <option value="cm">cm</option>
+                </select>
                 <div class="custom-select-wrap export-select-wrap" id="unitSelectWrap">
                     <div class="custom-select-trigger" id="unitSelectTrigger" onclick="toggleUnitDropdown()">
                         <span id="unitSelectText">px</span>
