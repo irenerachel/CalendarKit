@@ -639,6 +639,45 @@
         .bg-opacity-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
         .img-opacity-row { display: flex; gap: 8px; align-items: center; }
 
+        /* 信息提示图标 */
+        .info-hint {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            font-size: 10px;
+            color: var(--primary-light);
+            border: 1px solid var(--primary-light);
+            border-radius: 50%;
+            cursor: help;
+            margin-left: 4px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .info-hint:hover { opacity: 1; }
+        .info-hint::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            font-size: 10px;
+            font-weight: normal;
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .info-hint:hover::after { opacity: 1; visibility: visible; }
+
         /* 设置保存区域 */
         .settings-save-section { margin-top: auto; }
         .settings-row {
@@ -1548,12 +1587,11 @@
                 </div>
 
                 <div class="section">
-                    <div class="section-title">✦ 背景图</div>
+                    <div class="section-title">✦ 背景图 <span class="info-hint" data-tip="Alt/Opt+拖拽移动 · Alt/Opt+滚轮缩放">?</span></div>
                     <div class="upload-box" id="bgUpload">
                         <input type="file" id="bgInput" accept="image/*">
                         <div class="icon">🎨</div>
                         <div class="text">上传背景</div>
-                        <div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">Alt/Opt+拖拽 · Alt/Opt+滚轮</div>
                     </div>
                     <div class="bg-opacity-row" id="bgOpacityRow" style="display:none;">
                         <span style="font-size:10px;color:var(--primary-light);white-space:nowrap;">透明度</span>
@@ -2699,9 +2737,7 @@
                     </div>`;
             } else {
                 area.classList.remove('has-image');
-                const isTouchBg = 'ontouchstart' in window;
-                const bgSubText = isTouchBg ? '长按拖动 · 双指缩放' : 'Alt/Opt+拖拽 · Alt/Opt+滚轮';
-                area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><div class="icon">🎨</div><div class="text">上传背景</div><div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">${bgSubText}</div>`;
+                area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><div class="icon">🎨</div><div class="text">上传背景</div>`;
             }
             setupBgUpload();
             updatePanelScrollbarGutter();
