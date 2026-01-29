@@ -1510,7 +1510,7 @@
                         <input type="file" id="bgInput" accept="image/*">
                         <div class="icon">🎨</div>
                         <div class="text">上传背景</div>
-                        <div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">Alt+拖拽移动 · Alt+滚轮缩放</div>
+                        <div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">Alt/Opt+拖拽 · Alt/Opt+滚轮</div>
                     </div>
                     <div class="bg-opacity-row" id="bgOpacityRow" style="display:none;">
                         <span style="font-size:10px;color:var(--primary-light);">透明度</span>
@@ -2530,7 +2530,7 @@
             const card = document.getElementById('calendarCard');
             const opacityRow = document.getElementById('bgOpacityRow');
             if (currentBgSrc) {
-                layer.innerHTML = `<img src="${currentBgSrc}"><div class="bg-hint">Alt+拖拽移动 · Alt+滚轮缩放</div>`;
+                layer.innerHTML = `<img src="${currentBgSrc}"><div class="bg-hint">Alt/Opt+拖拽 · Alt/Opt+滚轮</div>`;
                 updateBgTransform();
                 card.classList.add('has-bg');
                 opacityRow.style.display = 'flex';
@@ -2623,7 +2623,7 @@
             } else {
                 area.classList.remove('has-image');
                 const isTouchBg = 'ontouchstart' in window;
-                const bgSubText = isTouchBg ? '长按拖动 · 双指缩放' : 'Alt+拖拽移动 · Alt+滚轮缩放';
+                const bgSubText = isTouchBg ? '长按拖动 · 双指缩放' : 'Alt/Opt+拖拽 · Alt/Opt+滚轮';
                 area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><div class="icon">🎨</div><div class="text">上传背景</div><div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">${bgSubText}</div>`;
             }
             setupBgUpload();
