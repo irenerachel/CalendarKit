@@ -3516,6 +3516,14 @@
                             const layerH = originalBgLayer.offsetHeight;
                             clonedBgLayer.style.width = layerW + 'px';
                             clonedBgLayer.style.height = layerH + 'px';
+                            // 关键修复：html2canvas不支持CSS变量，需要显式设置计算后的opacity值
+                            const computedOpacity = getComputedStyle(originalBgLayer).opacity;
+                            clonedBgLayer.style.opacity = computedOpacity;
+                        }
+                        // 隐藏背景提示文字
+                        const clonedBgHint = clonedDoc.querySelector('#bgLayer .bg-hint');
+                        if (clonedBgHint) {
+                            clonedBgHint.style.display = 'none';
                         }
                         if (clonedBgImg && originalBgImg && originalBgLayer) {
                             // 用getBoundingClientRect获取实际渲染的位置和尺寸
