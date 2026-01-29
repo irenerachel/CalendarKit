@@ -3547,7 +3547,7 @@
                     link.click();
                 }).catch(err => {
                     console.error('导出失败:', err);
-                    alert('导出失败，请重试');
+                    alert('导出失败: ' + (err.message || err) + '\n请查看控制台获取详细信息');
                     // 恢复预览缩放和边框
                     container.style.transform = originalTransform;
                     card.style.removeProperty('border');
