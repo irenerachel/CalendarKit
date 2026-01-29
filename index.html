@@ -3362,6 +3362,7 @@
                     logging: true,
                     imageTimeout: 0,
                     onclone: function(clonedDoc) {
+                      try {
                         // 确保克隆的元素保持正确尺寸
                         const clonedCard = clonedDoc.getElementById('calendarCard');
                         if (clonedCard) {
@@ -3464,6 +3465,17 @@
                                 clonedGrid.style.setProperty('--divider-bg', originalBefore.backgroundColor);
                             }
                         }
+                        // 处理:has()选择器兼容性 - 周历时calendar-header需要更大margin
+                        if (clonedGrid && clonedGrid.classList.contains('week-grid')) {
+                            const clonedHeader = clonedDoc.querySelector('.calendar-header');
+                            const originalHeader = document.querySelector('.calendar-header');
+                            if (clonedHeader && originalHeader) {
+                                clonedHeader.style.marginBottom = getComputedStyle(originalHeader).marginBottom;
+                            }
+                        }
+                      } catch(e) {
+                        console.error('onclone错误:', e);
+                      }
                     }
                 }).then(canvas => {
                     // 恢复预览缩放和边框
