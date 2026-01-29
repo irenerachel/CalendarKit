@@ -427,6 +427,23 @@
             font-size: 12px;
         }
 
+        /* 侧边栏下拉样式 */
+        .sidebar-select-wrap { position: relative; width: 100%; }
+        .sidebar-select-wrap .custom-select-trigger {
+            padding: 8px 12px;
+            font-size: 13px;
+            width: 100%;
+            background: white;
+        }
+        .sidebar-select-wrap .custom-select-dropdown {
+            min-width: 100%;
+            max-height: 200px;
+        }
+        .sidebar-select-wrap .custom-select-option {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
         .pill-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
         .custom-ratio-wrap {
             display: flex;
@@ -1210,16 +1227,28 @@
             </div>
             <div class="size-controls">
                 <label>画布</label>
-                <select id="sizePreset" onchange="applyPreset()" style="padding:5px 8px;font-size:11px;">
-                    <option value="">预设尺寸</option>
-                </select>
+                <select id="sizePreset" style="display:none;"></select>
+                <div class="custom-select-wrap export-select-wrap" id="presetSelectWrap">
+                    <div class="custom-select-trigger" id="presetSelectTrigger" onclick="togglePresetDropdown()">
+                        <span id="presetSelectText">预设尺寸</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="presetSelectDropdown"></div>
+                </div>
                 <input type="number" id="widthInput" value="390" min="100" max="3000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('width')" onblur="hideSlider('width')">
                 <span>×</span>
                 <input type="number" id="heightInput" value="520" min="100" max="2000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('height')" onblur="hideSlider('height')">
-                <select id="sizeUnit" onchange="changeSizeUnit()">
-                    <option value="px">px</option>
-                    <option value="cm">cm</option>
-                </select>
+                <select id="sizeUnit" style="display:none;"></select>
+                <div class="custom-select-wrap export-select-wrap" id="unitSelectWrap">
+                    <div class="custom-select-trigger" id="unitSelectTrigger" onclick="toggleUnitDropdown()">
+                        <span id="unitSelectText">px</span>
+                        <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="unitSelectDropdown">
+                        <div class="custom-select-option selected" data-value="px">px</div>
+                        <div class="custom-select-option" data-value="cm">cm</div>
+                    </div>
+                </div>
                 <button onclick="resetToDefault()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:14px;cursor:pointer;color:var(--primary);" title="恢复默认设置">↺</button>
                 <button onclick="saveCurrentSize()" style="padding:4px 10px;border:2px solid var(--border);border-radius:6px;background:var(--yellow-light);font-size:11px;cursor:pointer;color:var(--primary);" title="保存当前尺寸">💾</button>
                 <span style="border-left:1px solid var(--border);height:20px;margin:0 4px;"></span>
@@ -1294,10 +1323,24 @@
                             <input type="number" id="year" min="1900" max="2100" onchange="updateCalendar()">
                         </div>
                         <div class="form-item" style="flex:1;">
-                            <select id="month" onchange="updateCalendar()"></select>
+                            <select id="month" style="display:none;"></select>
+                            <div class="custom-select-wrap sidebar-select-wrap" id="monthSelectWrap">
+                                <div class="custom-select-trigger" id="monthSelectTrigger" onclick="toggleMonthDropdown()">
+                                    <span id="monthSelectText">1月</span>
+                                    <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                                </div>
+                                <div class="custom-select-dropdown" id="monthSelectDropdown"></div>
+                            </div>
                         </div>
                         <div class="form-item" id="weekSelector" style="display:none;flex:1.5;">
-                            <select id="weekNumber" onchange="updateCalendar()"></select>
+                            <select id="weekNumber" style="display:none;"></select>
+                            <div class="custom-select-wrap sidebar-select-wrap" id="weekSelectWrap">
+                                <div class="custom-select-trigger" id="weekSelectTrigger" onclick="toggleWeekDropdown()">
+                                    <span id="weekSelectText">第1周</span>
+                                    <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                                </div>
+                                <div class="custom-select-dropdown" id="weekSelectDropdown"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1529,15 +1572,36 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const monthSelect = document.getElementById('month');
+            const monthDropdown = document.getElementById('monthSelectDropdown');
+            let monthOptionsHtml = '';
             for (let i = 1; i <= 12; i++) {
                 const opt = document.createElement('option');
                 opt.value = i;
                 opt.textContent = i + '月';
                 monthSelect.appendChild(opt);
+                monthOptionsHtml += `<div class="custom-select-option" data-value="${i}">${i}月</div>`;
             }
+            monthDropdown.innerHTML = monthOptionsHtml;
+            // 绑定月份下拉点击事件
+            monthDropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    monthSelect.value = value;
+                    document.getElementById('monthSelectText').textContent = opt.textContent;
+                    monthDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closeMonthDropdown();
+                    updateCalendar();
+                });
+            });
             const now = new Date();
             document.getElementById('year').value = now.getFullYear();
             document.getElementById('month').value = now.getMonth() + 1;
+            // 更新月份下拉显示
+            document.getElementById('monthSelectText').textContent = (now.getMonth() + 1) + '月';
+            monthDropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.getAttribute('data-value') == (now.getMonth() + 1));
+            });
 
             setupBgUpload();
             initImageSection();
@@ -1662,19 +1726,42 @@
                 });
             });
 
-            // 点击外部关闭
+            // 单位下拉
+            document.getElementById('unitSelectDropdown').querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    document.getElementById('sizeUnit').value = value;
+                    document.getElementById('unitSelectText').textContent = opt.textContent;
+                    document.getElementById('unitSelectDropdown').querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closeUnitDropdown();
+                    changeSizeUnit();
+                });
+            });
+
+            // 点击外部关闭所有下拉
             document.addEventListener('click', (e) => {
-                if (!document.getElementById('formatSelectWrap').contains(e.target)) {
-                    closeFormatDropdown();
-                }
-                if (!document.getElementById('scaleSelectWrap').contains(e.target)) {
-                    closeScaleDropdown();
-                }
+                if (!document.getElementById('formatSelectWrap').contains(e.target)) closeFormatDropdown();
+                if (!document.getElementById('scaleSelectWrap').contains(e.target)) closeScaleDropdown();
+                if (!document.getElementById('presetSelectWrap').contains(e.target)) closePresetDropdown();
+                if (!document.getElementById('unitSelectWrap').contains(e.target)) closeUnitDropdown();
+                if (!document.getElementById('monthSelectWrap').contains(e.target)) closeMonthDropdown();
+                const weekWrap = document.getElementById('weekSelectWrap');
+                if (weekWrap && !weekWrap.contains(e.target)) closeWeekDropdown();
             });
         }
 
-        function toggleFormatDropdown() {
+        function closeAllDropdowns() {
+            closeFormatDropdown();
             closeScaleDropdown();
+            closePresetDropdown();
+            closeUnitDropdown();
+            closeMonthDropdown();
+            closeWeekDropdown();
+        }
+
+        function toggleFormatDropdown() {
+            closeAllDropdowns();
             document.getElementById('formatSelectTrigger').classList.toggle('active');
             document.getElementById('formatSelectDropdown').classList.toggle('show');
         }
@@ -1685,7 +1772,7 @@
         }
 
         function toggleScaleDropdown() {
-            closeFormatDropdown();
+            closeAllDropdowns();
             document.getElementById('scaleSelectTrigger').classList.toggle('active');
             document.getElementById('scaleSelectDropdown').classList.toggle('show');
         }
@@ -1693,6 +1780,58 @@
         function closeScaleDropdown() {
             document.getElementById('scaleSelectTrigger').classList.remove('active');
             document.getElementById('scaleSelectDropdown').classList.remove('show');
+        }
+
+        function togglePresetDropdown() {
+            closeAllDropdowns();
+            document.getElementById('presetSelectTrigger').classList.toggle('active');
+            document.getElementById('presetSelectDropdown').classList.toggle('show');
+        }
+
+        function closePresetDropdown() {
+            document.getElementById('presetSelectTrigger').classList.remove('active');
+            document.getElementById('presetSelectDropdown').classList.remove('show');
+        }
+
+        function toggleUnitDropdown() {
+            closeAllDropdowns();
+            document.getElementById('unitSelectTrigger').classList.toggle('active');
+            document.getElementById('unitSelectDropdown').classList.toggle('show');
+        }
+
+        function closeUnitDropdown() {
+            document.getElementById('unitSelectTrigger').classList.remove('active');
+            document.getElementById('unitSelectDropdown').classList.remove('show');
+        }
+
+        function toggleMonthDropdown() {
+            closeAllDropdowns();
+            document.getElementById('monthSelectTrigger').classList.toggle('active');
+            document.getElementById('monthSelectDropdown').classList.toggle('show');
+        }
+
+        function closeMonthDropdown() {
+            document.getElementById('monthSelectTrigger').classList.remove('active');
+            document.getElementById('monthSelectDropdown').classList.remove('show');
+        }
+
+        function toggleWeekDropdown() {
+            closeAllDropdowns();
+            const trigger = document.getElementById('weekSelectTrigger');
+            const dropdown = document.getElementById('weekSelectDropdown');
+            if (trigger && dropdown) {
+                trigger.classList.toggle('active');
+                dropdown.classList.toggle('show');
+            }
+        }
+
+        function closeWeekDropdown() {
+            const trigger = document.getElementById('weekSelectTrigger');
+            const dropdown = document.getElementById('weekSelectDropdown');
+            if (trigger && dropdown) {
+                trigger.classList.remove('active');
+                dropdown.classList.remove('show');
+            }
         }
 
         // 自定义设置模板下拉框
@@ -2070,9 +2209,26 @@
 
         function updatePresetOptions() {
             const select = document.getElementById('sizePreset');
+            const dropdown = document.getElementById('presetSelectDropdown');
             const presets = sizeUnit === 'cm' ? presetsCm : presetsPx;
             select.innerHTML = '<option value="">预设尺寸</option>' +
                 presets.map((p, i) => `<option value="${i}">${p.label} (${p.w}×${p.h})</option>`).join('');
+            // 更新自定义下拉
+            dropdown.innerHTML = '<div class="custom-select-option" data-value="">预设尺寸</div>' +
+                presets.map((p, i) => `<div class="custom-select-option" data-value="${i}">${p.label} (${p.w}×${p.h})</div>`).join('');
+            document.getElementById('presetSelectText').textContent = '预设尺寸';
+            // 绑定点击事件
+            dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    select.value = value;
+                    document.getElementById('presetSelectText').textContent = opt.textContent;
+                    dropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closePresetDropdown();
+                    if (value) applyPreset();
+                });
+            });
         }
 
         function applyPreset() {
@@ -2899,7 +3055,9 @@
 
         function updateWeekOptions(year, month) {
             const select = document.getElementById('weekNumber');
+            const dropdown = document.getElementById('weekSelectDropdown');
             select.innerHTML = '';
+            let dropdownHtml = '';
             const firstDay = new Date(year, month - 1, 1);
             const lastDay = new Date(year, month, 0);
             let current = new Date(firstDay);
@@ -2912,11 +3070,27 @@
                 e.setDate(e.getDate() + 6);
                 const opt = document.createElement('option');
                 opt.value = wc;
-                opt.textContent = `第${wc}周 (${s.getMonth() + 1}/${s.getDate()}-${e.getMonth() + 1}/${e.getDate()})`;
+                const label = `第${wc}周 (${s.getMonth() + 1}/${s.getDate()}-${e.getMonth() + 1}/${e.getDate()})`;
+                opt.textContent = label;
                 select.appendChild(opt);
+                dropdownHtml += `<div class="custom-select-option${wc === 1 ? ' selected' : ''}" data-value="${wc}">${label}</div>`;
                 current.setDate(current.getDate() + 7);
                 if (wc > 6) break;
             }
+            dropdown.innerHTML = dropdownHtml;
+            document.getElementById('weekSelectText').textContent = select.options[0]?.textContent || '第1周';
+            // 绑定周数下拉点击事件
+            dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    select.value = value;
+                    document.getElementById('weekSelectText').textContent = opt.textContent;
+                    dropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closeWeekDropdown();
+                    updateCalendar();
+                });
+            });
         }
 
         function generateMonthCalendar(year, month) {
