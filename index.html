@@ -3254,51 +3254,111 @@
         }
 
         function applyQuickTemplate(type) {
-            const card = document.getElementById('calendarCard');
+            // 快速模板名称映射
+            const templateNames = {
+                'horizontal': '预设横版模板',
+                'vertical': '预设竖版模板',
+                'minimal': '预设无图模板'
+            };
 
-            if (type === 'horizontal') {
-                // 横版模板：16:9，图片在左
-                cardWidth = 640;
-                cardHeight = 360;
-                currentOrientation = 'horizontal';
-                currentPosition = 'left';
-                card.classList.remove('vertical');
-                card.classList.add('horizontal');
-                card.dataset.pos = 'left';
-                document.getElementById('footerText').value = '日历小助手';
-                document.getElementById('cardFooter').textContent = '日历小助手';
-            } else if (type === 'vertical') {
-                // 竖版模板：3:4，图片在下
-                cardWidth = 390;
-                cardHeight = 520;
-                currentOrientation = 'vertical';
-                currentPosition = 'bottom';
-                card.classList.remove('horizontal');
-                card.classList.add('vertical');
-                card.dataset.pos = 'bottom';
-                document.getElementById('footerText').value = '日历小助手';
-                document.getElementById('cardFooter').textContent = '日历小助手';
-            } else if (type === 'minimal') {
-                // 纯净模板：3:4，无图片，无底部文字
-                cardWidth = 390;
-                cardHeight = 520;
-                currentOrientation = 'vertical';
-                currentPosition = 'none';
-                card.classList.remove('horizontal');
-                card.classList.add('vertical');
-                card.dataset.pos = 'none';
-                document.getElementById('footerText').value = '';
-                document.getElementById('cardFooter').textContent = '';
+            const templateName = templateNames[type];
+            const s = savedSettingsList.find(item => item.name === templateName);
+
+            if (s) {
+                // 找到了用户保存的模板，应用完整设置
+                applySettingsObject(s);
+            } else {
+                // 没找到，使用默认值
+                const card = document.getElementById('calendarCard');
+                if (type === 'horizontal') {
+                    cardWidth = 640;
+                    cardHeight = 360;
+                    currentOrientation = 'horizontal';
+                    currentPosition = 'left';
+                } else if (type === 'vertical') {
+                    cardWidth = 390;
+                    cardHeight = 520;
+                    currentOrientation = 'vertical';
+                    currentPosition = 'bottom';
+                } else if (type === 'minimal') {
+                    cardWidth = 390;
+                    cardHeight = 520;
+                    currentOrientation = 'vertical';
+                    currentPosition = 'none';
+                }
+                card.classList.remove('horizontal', 'vertical');
+                card.classList.add(currentOrientation);
+                card.dataset.pos = currentPosition;
+
+                updatePositionButtons();
+                document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
+                    e.classList.toggle('active', e.dataset.pos === currentPosition);
+                });
+
+                syncSizeInputs();
+                applyCardSize();
+                autoFitPreview();
             }
+        }
 
+        // 通用的设置应用函数
+        function applySettingsObject(s) {
+            cardWidth = s.cardWidth;
+            cardHeight = s.cardHeight;
+            currentOrientation = s.orientation;
+            currentPosition = s.position;
+            currentStyle = s.style;
+            sizeUnit = s.sizeUnit || 'px';
+            fontSizeMultiplier = (parseInt(s.fontSize) || 100) / 100;
+
+            document.getElementById('sizeUnit').value = sizeUnit;
+            syncSizeInputs();
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add(currentOrientation);
+            card.dataset.pos = currentPosition;
             updatePositionButtons();
             document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
                 e.classList.toggle('active', e.dataset.pos === currentPosition);
             });
 
-            syncSizeInputs();
+            document.querySelectorAll('.grid-btn[data-style]').forEach(e => {
+                e.classList.toggle('active', e.dataset.style === currentStyle);
+            });
+
+            document.documentElement.style.setProperty('--cal-theme', s.themeColor);
+            setThemeColorVariants(s.themeColor);
+            updateHighlightColor(s.themeColor);
+            document.getElementById('customColor').value = s.themeColor;
+            document.querySelectorAll('.color-btn').forEach(e => {
+                e.classList.toggle('active', e.dataset.color === s.themeColor);
+            });
+
+            document.getElementById('calendarFont').value = s.font;
+            document.documentElement.style.setProperty('--calendar-font', s.font);
+            updateFontDropdownSelection(s.font);
+
+            document.getElementById('fontSizeSlider').value = s.fontSize;
+            document.getElementById('fontSizeValue').textContent = s.fontSize + '%';
+
+            document.getElementById('footerText').value = s.footerText;
+            document.getElementById('cardFooter').textContent = s.footerText;
+
+            const dividerToggle = document.getElementById('dividerToggle');
+            dividerToggle.checked = s.hasDivider || false;
+            if (s.dividerThickness) {
+                document.getElementById('dividerThickness').value = s.dividerThickness;
+                document.getElementById('dividerThicknessValue').textContent = s.dividerThickness + 'px';
+                document.documentElement.style.setProperty('--divider-thickness', s.dividerThickness + 'px');
+            }
+            toggleDivider();
+
+            document.getElementById('hideOtherMonth').checked = s.hideOtherMonth || false;
+
             applyCardSize();
             autoFitPreview();
+            updateCalendar();
         }
 
         function loadSavedSettings() {
@@ -3309,74 +3369,11 @@
             const s = savedSettingsList[parseInt(index)];
             if (!s) return;
 
-            // 恢复设置
-            cardWidth = s.cardWidth;
-            cardHeight = s.cardHeight;
-            currentOrientation = s.orientation;
-            currentPosition = s.position;
-            currentStyle = s.style;
-            sizeUnit = s.sizeUnit || 'px';
-            fontSizeMultiplier = (parseInt(s.fontSize) || 100) / 100;
-
-            // 更新UI
-            document.getElementById('sizeUnit').value = sizeUnit;
-            syncSizeInputs();
-
-            // 方向和位置
-            const card = document.getElementById('calendarCard');
-            card.classList.remove('horizontal', 'vertical');
-            card.classList.add(currentOrientation);
-            card.dataset.pos = currentPosition;
-            updatePositionButtons();
-            document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
-                e.classList.toggle('active', e.dataset.pos === currentPosition);
-            });
-
-            // 样式
-            document.querySelectorAll('.grid-btn[data-style]').forEach(e => {
-                e.classList.toggle('active', e.dataset.style === currentStyle);
-            });
-
-            // 主题色
-            document.documentElement.style.setProperty('--cal-theme', s.themeColor);
-            updateHighlightColor(s.themeColor);
-            document.getElementById('customColor').value = s.themeColor;
-            document.querySelectorAll('.color-btn').forEach(e => {
-                e.classList.toggle('active', e.dataset.color === s.themeColor);
-            });
-
-            // 字体
-            document.getElementById('calendarFont').value = s.font;
-            document.documentElement.style.setProperty('--calendar-font', s.font);
-            updateFontDropdownSelection(s.font);
-
-            // 字体大小
-            document.getElementById('fontSizeSlider').value = s.fontSize;
-            document.getElementById('fontSizeValue').textContent = s.fontSize + '%';
-
-            // 底部文字
-            document.getElementById('footerText').value = s.footerText;
-            document.getElementById('cardFooter').textContent = s.footerText;
-
-            // 分隔线
-            const dividerToggle = document.getElementById('dividerToggle');
-            dividerToggle.checked = s.hasDivider || false;
-            if (s.dividerThickness) {
-                document.getElementById('dividerThickness').value = s.dividerThickness;
-                document.getElementById('dividerThicknessValue').textContent = s.dividerThickness + 'px';
-                document.documentElement.style.setProperty('--divider-thickness', s.dividerThickness + 'px');
-            }
-            toggleDivider();
-
-            // 隐藏非当月
-            document.getElementById('hideOtherMonth').checked = s.hideOtherMonth || false;
-
-            applyCardSize();
-            autoFitPreview();
-            updateCalendar();
+            applySettingsObject(s);
 
             // 重置选择框
             select.value = '';
+            document.getElementById('settingsSelectText').textContent = '选择已保存的设置...';
         }
 
         function deleteSavedSettings() {
