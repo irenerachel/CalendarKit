@@ -1745,7 +1745,7 @@
             section.onwheel = (e) => {
                 if (currentImageSrc) {
                     e.preventDefault();
-                    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                    const delta = e.deltaY > 0 ? -0.02 : 0.02;
                     // 最小缩放为基础缩放的50%，最大为基础缩放的5倍
                     const minScale = imgBaseScale * 0.5;
                     const maxScale = imgBaseScale * 5;
@@ -2235,7 +2235,7 @@
             card.addEventListener('wheel', (e) => {
                 if (currentBgSrc && e.altKey) {
                     e.preventDefault();
-                    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                    const delta = e.deltaY > 0 ? -0.02 : 0.02;
                     bgScale = Math.max(0.5, Math.min(5, bgScale + delta));
                     updateBgTransform();
                 }
