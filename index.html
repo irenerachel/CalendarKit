@@ -3767,6 +3767,17 @@
                 if (match) previewScale = parseFloat(match[1]);
             }
 
+            // 在移除缩放前记录背景图的尺寸（因为背景图有min-width:100%，移除缩放后尺寸会变）
+            const bgImgForExport = document.querySelector('#bgLayer img');
+            const bgLayerForExport = document.getElementById('bgLayer');
+            let savedBgImgW = 0, savedBgImgH = 0, savedBgLayerW = 0, savedBgLayerH = 0;
+            if (bgImgForExport && bgLayerForExport) {
+                savedBgImgW = bgImgForExport.offsetWidth;
+                savedBgImgH = bgImgForExport.offsetHeight;
+                savedBgLayerW = bgLayerForExport.offsetWidth;
+                savedBgLayerH = bgLayerForExport.offsetHeight;
+            }
+
             // 临时移除预览缩放
             container.style.transform = 'none';
 
@@ -3867,16 +3878,13 @@
                         }
                         // 确保背景图保持正确的尺寸和位置（用固定像素值）
                         const clonedBgLayer = clonedDoc.getElementById('bgLayer');
-                        const originalBgLayer = document.getElementById('bgLayer');
                         const clonedBgImg = clonedDoc.querySelector('#bgLayer img');
-                        const originalBgImg = document.querySelector('#bgLayer img');
-                        if (clonedBgLayer && originalBgLayer) {
-                            const layerW = originalBgLayer.offsetWidth;
-                            const layerH = originalBgLayer.offsetHeight;
-                            clonedBgLayer.style.width = layerW + 'px';
-                            clonedBgLayer.style.height = layerH + 'px';
+                        if (clonedBgLayer && savedBgLayerW > 0) {
+                            // 使用预先记录的尺寸（移除缩放前的尺寸）
+                            clonedBgLayer.style.width = savedBgLayerW + 'px';
+                            clonedBgLayer.style.height = savedBgLayerH + 'px';
                             // 关键修复：html2canvas不支持CSS变量，需要显式设置计算后的opacity值
-                            const computedOpacity = getComputedStyle(originalBgLayer).opacity;
+                            const computedOpacity = getComputedStyle(bgLayerForExport).opacity;
                             clonedBgLayer.style.opacity = computedOpacity;
                         }
                         // 隐藏背景提示文字
@@ -3884,13 +3892,12 @@
                         if (clonedBgHint) {
                             clonedBgHint.style.display = 'none';
                         }
-                        if (clonedBgImg && originalBgImg && originalBgLayer) {
-                            const layerW = originalBgLayer.offsetWidth;
-                            const layerH = originalBgLayer.offsetHeight;
-
-                            // offsetWidth/Height 是应用 transform 之前的尺寸
-                            const baseW = originalBgImg.offsetWidth;
-                            const baseH = originalBgImg.offsetHeight;
+                        if (clonedBgImg && savedBgImgW > 0) {
+                            // 使用预先记录的尺寸（移除预览缩放前的真实显示尺寸）
+                            const layerW = savedBgLayerW;
+                            const layerH = savedBgLayerH;
+                            const baseW = savedBgImgW;
+                            const baseH = savedBgImgH;
 
                             // 最终渲染尺寸 = 基础尺寸 * bgScale
                             const finalW = baseW * bgScale;
@@ -3899,10 +3906,12 @@
                             // 原始定位: top:50%, left:50% + transform: translate(-50%+offsetX, -50%+offsetY) scale(bgScale)
                             // 转换为绝对定位:
                             // 1. 图片中心在 layer 的 50%, 50% 位置
-                            // 2. 然后偏移 bgOffsetX, bgOffsetY
-                            // 所以图片左上角 = (layerW/2 - finalW/2 + bgOffsetX, layerH/2 - finalH/2 + bgOffsetY)
-                            const finalX = layerW / 2 - finalW / 2 + bgOffsetX;
-                            const finalY = layerH / 2 - finalH / 2 + bgOffsetY;
+                            // 2. 然后偏移 bgOffsetX, bgOffsetY（也需要根据预览缩放调整）
+                            const adjustedOffsetX = bgOffsetX;
+                            const adjustedOffsetY = bgOffsetY;
+                            // 所以图片左上角 = (layerW/2 - finalW/2 + offsetX, layerH/2 - finalH/2 + offsetY)
+                            const finalX = layerW / 2 - finalW / 2 + adjustedOffsetX;
+                            const finalY = layerH / 2 - finalH / 2 + adjustedOffsetY;
 
                             clonedBgImg.style.cssText = `
                                 position: absolute;
