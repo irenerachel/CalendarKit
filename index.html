@@ -410,6 +410,23 @@
         .custom-select-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
 
+        /* 导出下拉样式 */
+        .export-select-wrap { position: relative; display: inline-block; }
+        .export-select-wrap .custom-select-trigger {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: 80px;
+            background: white;
+        }
+        .export-select-wrap .custom-select-dropdown {
+            min-width: 100%;
+            max-height: none;
+        }
+        .export-select-wrap .custom-select-option {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
         .pill-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
         .custom-ratio-wrap {
             display: flex;
@@ -1144,12 +1161,23 @@
                     <img src="qrcode.jpg" alt="二维码">
                 </div>
             </div>
-            <select id="exportFormat" style="padding:6px 24px 6px 12px;border:2px solid var(--border);border-radius:6px;font-size:12px;min-width:80px;" title="导出格式">
+            <select id="exportFormat" style="display:none;">
                 <option value="png">PNG</option>
                 <option value="jpeg">JPG</option>
                 <option value="svg">SVG</option>
             </select>
-            <select id="exportScale" style="padding:6px 12px;border:2px solid var(--border);border-radius:6px;font-size:12px;min-width:100px;" title="导出倍率">
+            <div class="custom-select-wrap export-select-wrap" id="formatSelectWrap">
+                <div class="custom-select-trigger" id="formatSelectTrigger" onclick="toggleFormatDropdown()">
+                    <span id="formatSelectText">PNG</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="formatSelectDropdown">
+                    <div class="custom-select-option" data-value="png">PNG</div>
+                    <div class="custom-select-option" data-value="jpeg">JPG</div>
+                    <div class="custom-select-option" data-value="svg">SVG</div>
+                </div>
+            </div>
+            <select id="exportScale" style="display:none;">
                 <option value="1">1x 原图</option>
                 <option value="2">2x 屏幕</option>
                 <option value="3" selected>3x 高清</option>
@@ -1157,6 +1185,20 @@
                 <option value="6">6x 大幅</option>
                 <option value="8">8x 超清</option>
             </select>
+            <div class="custom-select-wrap export-select-wrap" id="scaleSelectWrap">
+                <div class="custom-select-trigger" id="scaleSelectTrigger" onclick="toggleScaleDropdown()">
+                    <span id="scaleSelectText">3x 高清</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
+                </div>
+                <div class="custom-select-dropdown" id="scaleSelectDropdown">
+                    <div class="custom-select-option" data-value="1">1x 原图</div>
+                    <div class="custom-select-option" data-value="2">2x 屏幕</div>
+                    <div class="custom-select-option selected" data-value="3">3x 高清</div>
+                    <div class="custom-select-option" data-value="4">4x 印刷</div>
+                    <div class="custom-select-option" data-value="6">6x 大幅</div>
+                    <div class="custom-select-option" data-value="8">8x 超清</div>
+                </div>
+            </div>
             <button class="nav-btn" onclick="exportImage()">导出图片</button>
         </div>
     </nav>
@@ -1535,6 +1577,7 @@
             // 自定义字体下拉框初始化
             initFontDropdown();
             initSettingsDropdown();
+            initExportDropdowns();
         });
 
         // 自定义字体下拉框
@@ -1589,6 +1632,67 @@
                 }
             });
             document.getElementById('fontSelectText').textContent = value;
+        }
+
+        // 导出格式下拉框
+        function initExportDropdowns() {
+            // 格式下拉
+            const formatDropdown = document.getElementById('formatSelectDropdown');
+            formatDropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    document.getElementById('exportFormat').value = value;
+                    document.getElementById('formatSelectText').textContent = opt.textContent;
+                    formatDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closeFormatDropdown();
+                });
+            });
+
+            // 倍率下拉
+            const scaleDropdown = document.getElementById('scaleSelectDropdown');
+            scaleDropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const value = opt.getAttribute('data-value');
+                    document.getElementById('exportScale').value = value;
+                    document.getElementById('scaleSelectText').textContent = opt.textContent;
+                    scaleDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    closeScaleDropdown();
+                });
+            });
+
+            // 点击外部关闭
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('formatSelectWrap').contains(e.target)) {
+                    closeFormatDropdown();
+                }
+                if (!document.getElementById('scaleSelectWrap').contains(e.target)) {
+                    closeScaleDropdown();
+                }
+            });
+        }
+
+        function toggleFormatDropdown() {
+            closeScaleDropdown();
+            document.getElementById('formatSelectTrigger').classList.toggle('active');
+            document.getElementById('formatSelectDropdown').classList.toggle('show');
+        }
+
+        function closeFormatDropdown() {
+            document.getElementById('formatSelectTrigger').classList.remove('active');
+            document.getElementById('formatSelectDropdown').classList.remove('show');
+        }
+
+        function toggleScaleDropdown() {
+            closeFormatDropdown();
+            document.getElementById('scaleSelectTrigger').classList.toggle('active');
+            document.getElementById('scaleSelectDropdown').classList.toggle('show');
+        }
+
+        function closeScaleDropdown() {
+            document.getElementById('scaleSelectTrigger').classList.remove('active');
+            document.getElementById('scaleSelectDropdown').classList.remove('show');
         }
 
         // 自定义设置模板下拉框
