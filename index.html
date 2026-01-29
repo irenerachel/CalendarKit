@@ -1441,6 +1441,38 @@
         let currentPosition = 'bottom';
         let currentStyle = 'full';
         let cardWidth = 390, cardHeight = 520;
+
+        // 将 hex 颜色转换为 HSL
+        function hexToHSL(hex) {
+            hex = hex.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16) / 255;
+            const g = parseInt(hex.substring(2, 4), 16) / 255;
+            const b = parseInt(hex.substring(4, 6), 16) / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: h * 360, s: s * 100, l: l * 100 };
+        }
+
+        // 根据主题色更新高亮色（周末/节日）
+        function updateHighlightColor(themeColor) {
+            const hsl = hexToHSL(themeColor);
+            // 使用红色色相(0-10)，饱和度跟随主题色，亮度适中
+            const highlightS = Math.max(35, Math.min(70, hsl.s * 1.2)); // 饱和度稍微提升
+            const highlightL = Math.max(45, Math.min(60, hsl.l + 10)); // 亮度适中偏亮
+            const highlightColor = `hsl(5, ${highlightS}%, ${highlightL}%)`;
+            document.documentElement.style.setProperty('--pink', highlightColor);
+        }
         let sizeUnit = 'px';
         let previewZoom = 100;
         let fontSizeMultiplier = 1.2;
@@ -1471,6 +1503,8 @@
             initResizeHandles();
             applyCardSize();
             updateCalendar();
+            // 初始化高亮色
+            updateHighlightColor(getComputedStyle(document.documentElement).getPropertyValue('--cal-theme').trim());
             renderSizeHistory();
             renderSavedColors();
             renderSavedSettingsSelect();
@@ -2439,6 +2473,7 @@
             el.classList.add('active');
             const color = el.dataset.color;
             document.documentElement.style.setProperty('--cal-theme', color);
+            updateHighlightColor(color);
             document.getElementById('customColor').value = color;
         }
 
@@ -2450,6 +2485,7 @@
             document.querySelectorAll('.color-btn').forEach(e => e.classList.remove('active'));
             document.querySelectorAll('.saved-color').forEach(e => e.classList.remove('active'));
             document.documentElement.style.setProperty('--cal-theme', input.value);
+            updateHighlightColor(input.value);
             currentCustomColor = input.value;
         }
 
@@ -2520,6 +2556,7 @@
             document.querySelectorAll('.saved-color').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
             document.documentElement.style.setProperty('--cal-theme', color);
+            updateHighlightColor(color);
             document.getElementById('customColor').value = color;
         }
 
@@ -2644,6 +2681,7 @@
 
             // 主题色
             document.documentElement.style.setProperty('--cal-theme', s.themeColor);
+            updateHighlightColor(s.themeColor);
             document.getElementById('customColor').value = s.themeColor;
             document.querySelectorAll('.color-btn').forEach(e => {
                 e.classList.toggle('active', e.dataset.color === s.themeColor);
@@ -3075,6 +3113,7 @@
             });
 
             document.documentElement.style.setProperty('--cal-theme', state.themeColor);
+            updateHighlightColor(state.themeColor);
             document.getElementById('customColor').value = state.themeColor;
 
             document.getElementById('calendarFont').value = state.font;
