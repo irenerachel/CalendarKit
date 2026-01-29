@@ -25,7 +25,6 @@
         @font-face { font-family: '朱雀仿宋'; src: url('fonts/朱雀仿宋.ttf'); }
         @font-face { font-family: '天王星像素'; src: url('fonts/Uranus_Pixel_11Px.ttf'); }
         @font-face { font-family: '思源黑体'; src: url('fonts/思源黑体.otf'); }
-        @font-face { font-family: '小米繁体'; src: url('fonts/小米繁体.otf'); }
 
         :root {
             --cream: #F8F5F0;
@@ -1608,6 +1607,10 @@
                             <input type="checkbox" id="compactHeader" onchange="toggleCompactHeader()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
                             缩短标题间距
                         </label>
+                        <label style="display:flex;align-items:center;gap:5px;font-size:9px;color:var(--primary-light);cursor:pointer;">
+                            <input type="checkbox" id="useTraditional" onchange="updateCalendar()" style="accent-color:var(--primary);cursor:pointer;width:12px;height:12px;">
+                            繁体中文
+                        </label>
                     </div>
                 </div>
 
@@ -1645,7 +1648,6 @@
                         </div>
                         <div class="custom-select-dropdown" id="fontSelectDropdown">
                             <div class="custom-select-option" data-value="思源黑体">思源黑体</div>
-                            <div class="custom-select-option" data-value="小米繁体">小米繁体</div>
                             <div class="custom-select-option" data-value="鸿蒙黑体">鸿蒙黑体</div>
                             <div class="custom-select-option" data-value="阿里妈妈数黑体">阿里妈妈数黑体</div>
                             <div class="custom-select-option" data-value="江城黑体">江城黑体 <span class="recommend-tag">推荐</span></div>
@@ -1664,7 +1666,6 @@
                         </div>
                         <select id="calendarFont" style="display:none;" onchange="changeFont()">
                             <option value="思源黑体">思源黑体</option>
-                            <option value="小米繁体">小米繁体</option>
                             <option value="鸿蒙黑体">鸿蒙黑体</option>
                             <option value="阿里妈妈数黑体">阿里妈妈数黑体</option>
                             <option value="江城黑体">江城黑体</option>
@@ -1753,6 +1754,29 @@
         let currentPosition = 'bottom';
         let currentStyle = 'full';
         let cardWidth = 390, cardHeight = 520;
+
+        // 简繁转换映射（仅包含日历相关的常用字）
+        const s2tMap = {
+            '年': '年', '月': '月', '日': '日', '周': '週', '第': '第',
+            '一': '一', '二': '二', '三': '三', '四': '四', '五': '五', '六': '六', '七': '七', '八': '八', '九': '九', '十': '十',
+            '正': '正', '腊': '臘', '闰': '閏',
+            '初': '初', '廿': '廿', '卅': '卅',
+            '春': '春', '夏': '夏', '秋': '秋', '冬': '冬',
+            '节': '節', '历': '曆', '农': '農',
+            '立': '立', '雨': '雨', '惊': '驚', '蛰': '蟄', '清': '清', '明': '明', '谷': '穀',
+            '小': '小', '大': '大', '芒': '芒', '种': '種', '至': '至', '暑': '暑', '处': '處',
+            '露': '露', '寒': '寒', '霜': '霜', '降': '降', '雪': '雪',
+            '元': '元', '旦': '旦', '除': '除', '夕': '夕', '端': '端', '午': '午', '中': '中',
+            '国': '國', '庆': '慶', '劳': '勞', '动': '動', '儿': '兒', '童': '童', '妇': '婦', '女': '女',
+            '母': '母', '亲': '親', '父': '父', '师': '師', '教': '教', '圣': '聖', '诞': '誕',
+            '情': '情', '人': '人', '愚': '愚', '万': '萬', '圣': '聖', '感': '感', '恩': '恩',
+            '助': '助', '手': '手', '小': '小'
+        };
+
+        function toTraditional(text) {
+            if (!document.getElementById('useTraditional')?.checked) return text;
+            return text.split('').map(c => s2tMap[c] || c).join('');
+        }
 
         // 将 hex 颜色转换为 HSL
         function hexToHSL(hex) {
@@ -3262,7 +3286,8 @@
                 hasDivider: document.getElementById('dividerToggle').checked,
                 dividerThickness: document.getElementById('dividerThickness').value,
                 hideOtherMonth: document.getElementById('hideOtherMonth').checked,
-                compactHeader: document.getElementById('compactHeader').checked
+                compactHeader: document.getElementById('compactHeader').checked,
+                useTraditional: document.getElementById('useTraditional').checked
             };
 
             savedSettingsList.unshift(settings);
@@ -3382,6 +3407,8 @@
             document.getElementById('compactHeader').checked = s.compactHeader || false;
             toggleCompactHeader();
 
+            document.getElementById('useTraditional').checked = s.useTraditional || false;
+
             applyCardSize();
             autoFitPreview();
             updateCalendar();
@@ -3430,7 +3457,8 @@
                 ft: document.getElementById('footerText').value,
                 bo: document.getElementById('bgOpacitySlider').value,
                 ho: document.getElementById('hideOtherMonth').checked ? 1 : 0,
-                ch: document.getElementById('compactHeader').checked ? 1 : 0
+                ch: document.getElementById('compactHeader').checked ? 1 : 0,
+                tc: document.getElementById('useTraditional').checked ? 1 : 0
             };
             const encoded = btoa(encodeURIComponent(JSON.stringify(settings)));
             const url = window.location.origin + window.location.pathname + '?s=' + encoded;
@@ -3516,6 +3544,9 @@
                 document.getElementById('compactHeader').checked = settings.ch === 1;
                 toggleCompactHeader();
 
+                // 繁体中文
+                document.getElementById('useTraditional').checked = settings.tc === 1;
+
                 updatePositionButtons();
                 document.querySelectorAll('#positionGroup .pill-btn').forEach(e => {
                     e.classList.toggle('active', e.dataset.pos === currentPosition);
@@ -3584,11 +3615,11 @@
                 lastWeekMonth = month;
             }
 
-            document.getElementById('yearMonthDisplay').textContent = `${year}年${month}月`;
+            document.getElementById('yearMonthDisplay').textContent = toTraditional(`${year}年${month}月`);
             if (currentStyle === 'full') {
                 try {
                     const lunar = Lunar.fromDate(new Date(year, month - 1, 15));
-                    document.getElementById('lunarMonthDisplay').textContent = `${lunar.getYearInChinese()}年 ${lunar.getMonthInChinese()}月`;
+                    document.getElementById('lunarMonthDisplay').textContent = toTraditional(`${lunar.getYearInChinese()}年 ${lunar.getMonthInChinese()}月`);
                 } catch (e) { }
             }
 
@@ -3690,11 +3721,11 @@
                     const f = lunar.getFestivals();
                     const jq = lunar.getJieQi();
                     const sf = Solar.fromDate(date).getFestivals();
-                    if (sf.length) { ld.textContent = sf[0].substring(0, 3); ld.classList.add('festival'); }
-                    else if (f.length) { ld.textContent = f[0].substring(0, 3); ld.classList.add('festival'); }
-                    else if (jq) { ld.textContent = jq; ld.classList.add('jieqi'); }
-                    else if (lunar.getDay() === 1) { ld.textContent = lunar.getMonthInChinese() + '月'; }
-                    else { ld.textContent = lunar.getDayInChinese(); }
+                    if (sf.length) { ld.textContent = toTraditional(sf[0].substring(0, 3)); ld.classList.add('festival'); }
+                    else if (f.length) { ld.textContent = toTraditional(f[0].substring(0, 3)); ld.classList.add('festival'); }
+                    else if (jq) { ld.textContent = toTraditional(jq); ld.classList.add('jieqi'); }
+                    else if (lunar.getDay() === 1) { ld.textContent = toTraditional(lunar.getMonthInChinese() + '月'); }
+                    else { ld.textContent = toTraditional(lunar.getDayInChinese()); }
                     cell.appendChild(ld);
                 } catch (e) { }
             }
@@ -3730,7 +3761,7 @@
                 row.className = 'week-day-row';
                 const dow = date.getDay();
                 if (dow === 0 || dow === 6) row.classList.add('weekend');
-                row.innerHTML = `<div class="week-day-name">${names[i]}</div><div class="week-solar">${date.getDate()}</div>`;
+                row.innerHTML = `<div class="week-day-name">${toTraditional(names[i])}</div><div class="week-solar">${date.getDate()}</div>`;
 
                 if (currentStyle === 'full') {
                     try {
@@ -3740,7 +3771,7 @@
                         const jq = lunar.getJieQi();
                         if (f.length) txt += ' · ' + f[0];
                         else if (jq) txt += ' · ' + jq;
-                        row.innerHTML += `<div class="week-lunar">${txt}</div>`;
+                        row.innerHTML += `<div class="week-lunar">${toTraditional(txt)}</div>`;
                     } catch (e) { }
                 }
                 grid.appendChild(row);
