@@ -3356,10 +3356,10 @@
 
             // 复制到剪贴板
             navigator.clipboard.writeText(url).then(() => {
-                alert('分享链接已复制到剪贴板！\n\n发给朋友打开即可使用相同设置~');
+                alert('分享链接已复制！\n\n朋友打开即可使用相同设置~\n（图片需另外发送哦）');
             }).catch(() => {
                 // 如果clipboard API不可用，显示链接让用户手动复制
-                prompt('复制以下链接分享给朋友：', url);
+                prompt('复制以下链接分享给朋友（图片需另外发送）：', url);
             });
         }
 
