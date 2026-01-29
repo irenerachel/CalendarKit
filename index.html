@@ -302,7 +302,7 @@
             padding: 16px 20px !important;
             display: flex;
             flex-direction: column;
-            overflow-y: scroll;
+            overflow-y: auto;
             box-sizing: border-box;
         }
         .control-panel::-webkit-scrollbar { width: 6px; }
@@ -325,6 +325,7 @@
             background: linear-gradient(135deg, #FDFCFA 0%, #F8F5F0 100%);
             border: 1px solid var(--border);
             border-radius: 8px;
+            min-width: 0;
         }
         .section.full-width { grid-column: 1 / -1; }
         .section.date-section {
@@ -1388,7 +1389,7 @@
                                     <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
                                 </div>
                                 <div class="custom-select-dropdown" id="monthSelectDropdown"></div>
-                            </div>
+            </div>
                         </div>
                         <div class="form-item" id="weekSelector" style="display:none;flex:1.5;">
                             <select id="weekNumber" style="display:none;"></select>
@@ -1445,7 +1446,7 @@
                     </div>
                     <div class="img-opacity-row" id="imgOpacityRow" style="display:none;margin-top:8px;">
                         <span style="font-size:9px;color:var(--primary-light);white-space:nowrap;">透明度</span>
-                        <input type="range" id="imgOpacitySlider" min="10" max="100" value="100" style="flex:1;accent-color:var(--primary);" oninput="changeImgOpacity()">
+                        <input type="range" id="imgOpacitySlider" min="10" max="100" value="100" style="flex:1;min-width:0;accent-color:var(--primary);" oninput="changeImgOpacity()">
                         <span id="imgOpacityValue" style="font-size:9px;min-width:28px;text-align:right;">100%</span>
                     </div>
                 </div>
@@ -1493,7 +1494,7 @@
                     <div class="section-title">✦ 字体</div>
                     <div class="form-row" style="align-items:center;margin-bottom:8px;">
                         <span style="font-size:10px;color:var(--primary-light);white-space:nowrap;">大小</span>
-                        <input type="range" id="fontSizeSlider" min="50" max="200" value="120" style="flex:1;accent-color:var(--primary);" oninput="changeFontSize()">
+                        <input type="range" id="fontSizeSlider" min="50" max="200" value="120" style="flex:1;min-width:0;accent-color:var(--primary);" oninput="changeFontSize()">
                         <span id="fontSizeValue" style="font-size:10px;min-width:36px;text-align:right;">120%</span>
                     </div>
                     <div class="custom-select-wrap" id="fontSelectWrap">
@@ -1635,6 +1636,10 @@
         let isBgDragging = false, bgDragStartX, bgDragStartY, bgStartOffsetX, bgStartOffsetY;
         let isResizing = false, resizeDir = '', resizeStartX, resizeStartY, startWidth, startHeight;
 
+        function updatePanelScrollbarGutter() {
+            // 滚动条始终显示，无需动态调整
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const monthSelect = document.getElementById('month');
             const monthDropdown = document.getElementById('monthSelectDropdown');
@@ -1674,6 +1679,8 @@
             initResizeHandles();
             applyCardSize();
             updateCalendar();
+            updatePanelScrollbarGutter();
+            window.addEventListener('resize', updatePanelScrollbarGutter);
             // 初始化主题色变量
             const initialTheme = getComputedStyle(document.documentElement).getPropertyValue('--cal-theme').trim();
             setThemeColorVariants(initialTheme);
@@ -2576,6 +2583,7 @@
             restoreScroll();
             setTimeout(restoreScroll, 10);
             setTimeout(restoreScroll, 50);
+            updatePanelScrollbarGutter();
         }
 
         function updateImageTransform() {
@@ -2696,6 +2704,7 @@
                 area.innerHTML = `<input type="file" id="bgInput" accept="image/*"><div class="icon">🎨</div><div class="text">上传背景</div><div class="sub" style="font-size:9px;color:var(--primary-light);opacity:0.7;margin-top:2px;">${bgSubText}</div>`;
             }
             setupBgUpload();
+            updatePanelScrollbarGutter();
         }
 
         function deleteBg() {
