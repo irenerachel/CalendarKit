@@ -1174,6 +1174,329 @@
         .week-solar { font-size: calc(14px * var(--cal-scale, 1)); font-weight: 700; width: calc(22px * var(--cal-scale, 1)); color: var(--cal-theme); }
         .week-lunar { font-size: calc(10px * var(--cal-scale, 1)); color: var(--cal-theme); opacity: 0.6; flex: 1; }
 
+        /* ========== 明信片样式 ========== */
+        .postcard-back {
+            width: 100%;
+            height: 100%;
+            background: #FFFEF8;
+            display: flex;
+            font-family: var(--calendar-font);
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: inherit;
+        }
+
+        .postcard-classic {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .postcard-message {
+            flex: 1;
+            padding: calc(20px * var(--cal-scale, 1));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .message-lines {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                transparent,
+                transparent calc(24px * var(--cal-scale, 1) - 1px),
+                var(--cal-theme-25, rgba(93,78,74,0.25)) calc(24px * var(--cal-scale, 1))
+            );
+        }
+
+        .postcard-divider {
+            width: 1px;
+            background: var(--cal-theme, #5D4E4A);
+            margin: calc(15px * var(--cal-scale, 1)) 0;
+        }
+
+        .postcard-address {
+            width: 45%;
+            padding: calc(20px * var(--cal-scale, 1));
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stamp-box {
+            width: calc(50px * var(--cal-scale, 1));
+            height: calc(60px * var(--cal-scale, 1));
+            border: calc(1.5px * var(--cal-scale, 1)) dashed var(--cal-theme, #5D4E4A);
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: calc(10px * var(--cal-scale, 1));
+            color: var(--cal-theme-30, rgba(93,78,74,0.3));
+            margin-bottom: calc(20px * var(--cal-scale, 1));
+        }
+
+        .address-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: calc(16px * var(--cal-scale, 1));
+        }
+
+        .address-line {
+            height: 1px;
+            background: var(--cal-theme, #5D4E4A);
+            width: 100%;
+        }
+
+        .address-line.shorter {
+            width: 60%;
+        }
+
+        .postcard-blank {
+            width: 100%;
+            height: 100%;
+            background: #FFFEF8;
+        }
+
+        /* 明信片正面·图文样式 */
+        .postcard-front-mixed {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: inherit;
+            overflow: hidden;
+        }
+
+        .postcard-image-half {
+            width: 55%;
+            height: 100%;
+            background: #f5f5f5;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .postcard-image-half .placeholder {
+            text-align: center;
+            color: #999;
+            font-size: calc(12px * var(--cal-scale, 1));
+        }
+
+        .postcard-image-half .placeholder .icon {
+            font-size: calc(32px * var(--cal-scale, 1));
+            margin-bottom: calc(8px * var(--cal-scale, 1));
+        }
+
+        .postcard-image-half img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .postcard-image-half.has-image {
+            cursor: move;
+        }
+
+        .postcard-image-half.has-image::after {
+            content: '拖拽移动 · 滚轮缩放 · 双击换图';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .postcard-image-half.has-image:hover::after {
+            opacity: 1;
+        }
+
+        .postcard-image-half.drag-over {
+            background: #e8f4e8 !important;
+            outline: 3px dashed var(--primary, #4A7C59);
+            outline-offset: -3px;
+        }
+
+        .postcard-image-half.drag-over::before {
+            content: '松开鼠标上传图片';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(74, 124, 89, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .postcard-info-half {
+            width: 45%;
+            height: 100%;
+            background: #FFFEF8;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: calc(24px * var(--cal-scale, 1));
+            box-sizing: border-box;
+            font-family: var(--calendar-font);
+        }
+
+        .postcard-info-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .postcard-title {
+            font-size: calc(20px * var(--cal-scale, 1));
+            font-weight: 700;
+            color: var(--cal-theme, #5D4E4A);
+            margin-bottom: calc(8px * var(--cal-scale, 1));
+            line-height: 1.3;
+            outline: none;
+            border: none;
+            background: transparent;
+        }
+
+        .postcard-title:empty:before {
+            content: '在这里输入标题';
+            color: var(--cal-theme-30, rgba(93,78,74,0.3));
+        }
+
+        .postcard-subtitle {
+            font-size: calc(11px * var(--cal-scale, 1));
+            color: var(--cal-theme, #5D4E4A);
+            opacity: 0.6;
+            margin-bottom: calc(16px * var(--cal-scale, 1));
+            letter-spacing: calc(1px * var(--cal-scale, 1));
+            outline: none;
+            border: none;
+            background: transparent;
+        }
+
+        .postcard-subtitle:empty:before {
+            content: '副标题 / 日期';
+            color: var(--cal-theme-30, rgba(93,78,74,0.3));
+        }
+
+        .postcard-desc {
+            font-size: calc(10px * var(--cal-scale, 1));
+            color: var(--cal-theme, #5D4E4A);
+            opacity: 0.8;
+            line-height: 1.8;
+            outline: none;
+            border: none;
+            background: transparent;
+        }
+
+        .postcard-desc:empty:before {
+            content: '在这里输入描述文字...';
+            color: var(--cal-theme-30, rgba(93,78,74,0.3));
+        }
+
+        .postcard-info-footer {
+            font-size: calc(9px * var(--cal-scale, 1));
+            color: var(--cal-theme, #5D4E4A);
+            opacity: 0.3;
+            letter-spacing: calc(3px * var(--cal-scale, 1));
+            text-align: right;
+            padding-top: calc(12px * var(--cal-scale, 1));
+            border-top: 1px solid var(--cal-theme-25, rgba(93,78,74,0.25));
+        }
+
+        /* 明信片模式下隐藏日历区域和原图片区域 */
+        .calendar-card.postcard-mode .calendar-section {
+            display: none;
+        }
+
+        .calendar-card.postcard-mode .image-section {
+            display: none !important;
+        }
+
+        /* 明信片正面·图文模式 */
+        .calendar-card.postcard-mode.postcard-mixed .postcard-front-mixed {
+            display: flex !important;
+        }
+
+        .calendar-card.postcard-mode.postcard-mixed .postcard-back {
+            display: none !important;
+        }
+
+        /* 明信片正面·纯图模式 */
+        .calendar-card.postcard-mode.postcard-front .image-section {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .calendar-card.postcard-mode.postcard-front .postcard-front-mixed {
+            display: none !important;
+        }
+
+        .calendar-card.postcard-mode.postcard-front .postcard-back {
+            display: none !important;
+        }
+
+        /* 明信片正面·纯图模式的操作提示 */
+        .calendar-card.postcard-mode.postcard-front .image-section::after {
+            content: '拖拽移动 · 滚轮缩放 · 双击换图';
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .calendar-card.postcard-mode.postcard-front .image-section:hover::after {
+            opacity: 0.9;
+        }
+
+        /* 明信片背面模式 */
+        .calendar-card.postcard-mode.postcard-back-view .postcard-front-mixed {
+            display: none !important;
+        }
+
+        .calendar-card.postcard-mode.postcard-back-view .postcard-back {
+            display: flex !important;
+        }
+
         /* 平板适配 */
         @media (max-width: 1000px) {
             .main-layout { flex-direction: column-reverse; height: auto; overflow: auto; }
@@ -1348,6 +1671,7 @@
         <div class="nav-center">
             <button class="nav-tab active" data-type="month" onclick="changeType(this)">月历</button>
             <button class="nav-tab" data-type="week" onclick="changeType(this)">周历</button>
+            <button class="nav-tab" data-type="postcard" onclick="changeType(this)">明信片</button>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-shrink:0;">
             <div class="follow-hint">
@@ -1417,17 +1741,17 @@
                 <span>×</span>
                 <input type="number" id="heightInput" value="520" min="100" max="2000" step="10" onchange="updateSizeFromInput()" onfocus="showSlider('height')" onblur="hideSlider('height')">
                 <select id="sizeUnit" style="display:none;">
-                    <option value="px">px</option>
-                    <option value="cm">cm</option>
+                    <option value="px">px (线上)</option>
+                    <option value="cm">cm (印刷)</option>
                 </select>
                 <div class="custom-select-wrap export-select-wrap" id="unitSelectWrap">
                     <div class="custom-select-trigger" id="unitSelectTrigger" onclick="toggleUnitDropdown()">
-                        <span id="unitSelectText">px</span>
+                        <span id="unitSelectText">px (线上)</span>
                         <svg width="12" height="12" viewBox="0 0 12 12"><path fill="currentColor" d="M2 4l4 4 4-4"/></svg>
                     </div>
                     <div class="custom-select-dropdown" id="unitSelectDropdown">
-                        <div class="custom-select-option selected" data-value="px">px</div>
-                        <div class="custom-select-option" data-value="cm">cm</div>
+                        <div class="custom-select-option selected" data-value="px">px (线上)</div>
+                        <div class="custom-select-option" data-value="cm">cm (印刷)</div>
                     </div>
                 </div>
                 <button onclick="resetToDefault()" style="padding:4px 8px;border:2px solid var(--border);border-radius:6px;background:white;font-size:14px;cursor:pointer;color:var(--primary);" title="恢复默认设置">↺</button>
@@ -1472,6 +1796,44 @@
                             </div>
                             <div id="calendarGrid"></div>
                             <div class="card-footer" id="cardFooter">日历小助手</div>
+                        </div>
+                        <!-- 明信片正面·图文区域 - 默认隐藏 -->
+                        <div class="postcard-front-mixed" id="postcardFrontMixed" style="display:none;">
+                            <div class="postcard-image-half" id="postcardImageHalf">
+                                <div class="placeholder">
+                                    <div class="icon">🖼️</div>
+                                    <div>点击上传图片</div>
+                                </div>
+                            </div>
+                            <div class="postcard-info-half">
+                                <div class="postcard-info-content">
+                                    <div class="postcard-title" contenteditable="true">在这里输入标题</div>
+                                    <div class="postcard-subtitle" contenteditable="true">副标题 / 日期</div>
+                                    <div class="postcard-desc" contenteditable="true">在这里输入简短的描述文字，可以是旅行感悟、祝福语或任何你想说的话...</div>
+                                </div>
+                                <div class="postcard-info-footer">POSTCARD</div>
+                            </div>
+                        </div>
+                        <!-- 明信片背面区域 - 默认隐藏 -->
+                        <div class="postcard-back" id="postcardBack" style="display:none;">
+                            <!-- 经典格式 -->
+                            <div class="postcard-classic" id="postcardClassic">
+                                <div class="postcard-message">
+                                    <div class="message-lines"></div>
+                                </div>
+                                <div class="postcard-divider"></div>
+                                <div class="postcard-address">
+                                    <div class="stamp-box">邮票</div>
+                                    <div class="address-lines">
+                                        <div class="address-line"></div>
+                                        <div class="address-line"></div>
+                                        <div class="address-line"></div>
+                                        <div class="address-line shorter"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 留白格式 -->
+                            <div class="postcard-blank" id="postcardBlank" style="display:none;"></div>
                         </div>
                     </div>
                     <div class="resize-handle edge right" data-dir="e"></div>
@@ -1536,7 +1898,18 @@
                     </div>
                 </div>
 
-                <div class="section full-width">
+                <!-- 明信片设置区 - 默认隐藏 -->
+                <div class="section full-width" id="postcardSettings" style="display:none;">
+                    <div class="section-title">✦ 明信片样式</div>
+                    <div class="pill-group">
+                        <button class="pill-btn active" data-postcard="mixed" onclick="changePostcardView(this)">正面·图文</button>
+                        <button class="pill-btn" data-postcard="front" onclick="changePostcardView(this)">正面·纯图</button>
+                        <button class="pill-btn" data-postcard="classic" onclick="changePostcardView(this)">背面·经典</button>
+                        <button class="pill-btn" data-postcard="blank" onclick="changePostcardView(this)">背面·留白</button>
+                    </div>
+                </div>
+
+                <div class="section full-width calendar-only-setting">
                     <div class="section-title">✦ 比例</div>
                     <div class="pill-group">
                                                 <button class="pill-btn" data-ratio="2:1" data-orient="horizontal" onclick="changeRatio(this)">2:1</button>
@@ -1567,7 +1940,7 @@
                     </div>
                 </div>
 
-                <div class="section">
+                <div class="section calendar-only-setting">
                     <div class="section-title">✦ 图片位置</div>
                     <div class="pill-group" id="positionGroup">
                         <button class="pill-btn" data-pos="left" onclick="changePosition(this)" disabled>图左</button>
@@ -1583,7 +1956,7 @@
                     </div>
                 </div>
 
-                <div class="section">
+                <div class="section calendar-only-setting">
                     <div class="section-title">✦ 日历样式</div>
                     <div class="btn-grid cols-3">
                         <button class="grid-btn active" data-style="full" onclick="changeStyle(this)">完整</button>
@@ -2456,6 +2829,10 @@
         }
 
         const presetsCm = [
+            { label: '📮 明信片 国际', w: 14.8, h: 10 },
+            { label: '📮 明信片 中国', w: 15, h: 10 },
+            { label: '📮 明信片 大尺寸', w: 16.5, h: 10.2 },
+            { label: '📮 明信片 美国 6×4"', w: 15.2, h: 10.2 },
             { label: 'A3 竖版', w: 29.7, h: 42 },
             { label: 'A3 横版', w: 42, h: 29.7 },
             { label: 'A4 竖版', w: 21, h: 29.7 },
@@ -2467,6 +2844,8 @@
         ];
 
         const presetsPx = [
+            { label: '📮 明信片 3:2', w: 1770, h: 1180 },
+            { label: '📮 明信片 国际', w: 1748, h: 1181 },
             { label: 'iPhone 壁纸', w: 1170, h: 2532 },
             { label: 'iPhone Pro Max', w: 1290, h: 2796 },
             { label: '安卓 1080P', w: 1080, h: 1920 },
@@ -2752,12 +3131,18 @@
                     restoreScroll();
                 }, 0);
                 section.ondblclick = () => {
-                    currentImageSrc = null;
-                    imgScale = 1;
-                    imgOffsetX = 0;
-                    imgOffsetY = 0;
-                    originalImageSize = { width: 0, height: 0 };
-                    updateImageSection();
+                    // 明信片模式下双击换图，普通模式下双击删除
+                    const isPostcardMode = document.getElementById('calendarCard').classList.contains('postcard-mode');
+                    if (isPostcardMode) {
+                        triggerImageUpload();
+                    } else {
+                        currentImageSrc = null;
+                        imgScale = 1;
+                        imgOffsetX = 0;
+                        imgOffsetY = 0;
+                        originalImageSize = { width: 0, height: 0 };
+                        updateImageSection();
+                    }
                 };
                 opacityRow.style.display = 'flex';
                 // 确保不会因为焦点变化导致滚动
@@ -2844,8 +3229,8 @@
 
             // 拖拽图片到日历区域自动作为背景图
             card.addEventListener('dragover', (e) => {
-                // 如果拖到图片区域，让图片区域处理
-                if (e.target.closest('#imageSection')) return;
+                // 如果拖到图片区域或图文混排区域，让对应区域处理
+                if (e.target.closest('#imageSection') || e.target.closest('#postcardImageHalf')) return;
                 e.preventDefault();
                 card.classList.add('drag-over-bg');
             });
@@ -2855,8 +3240,8 @@
                 }
             });
             card.addEventListener('drop', (e) => {
-                // 如果拖到图片区域，让图片区域处理
-                if (e.target.closest('#imageSection')) return;
+                // 如果拖到图片区域或图文混排区域，让对应区域处理
+                if (e.target.closest('#imageSection') || e.target.closest('#postcardImageHalf')) return;
                 e.preventDefault();
                 card.classList.remove('drag-over-bg');
                 if (e.dataTransfer.files.length && e.dataTransfer.files[0].type.startsWith('image/')) {
@@ -2906,15 +3291,295 @@
         function changeType(el) {
             document.querySelectorAll('.nav-tab').forEach(e => e.classList.remove('active'));
             el.classList.add('active');
-            const isWeek = el.dataset.type === 'week';
-            const weekSelector = document.getElementById('weekSelector');
-            weekSelector.style.display = isWeek ? 'flex' : 'none';
-            if (isWeek) {
-                const year = parseInt(document.getElementById('year').value);
-                const month = parseInt(document.getElementById('month').value);
-                updateWeekOptions(year, month);
+
+            const type = el.dataset.type;
+            const isWeek = type === 'week';
+            const isPostcard = type === 'postcard';
+
+            // 周选择器
+            document.getElementById('weekSelector').style.display = isWeek ? 'flex' : 'none';
+
+            // 明信片设置面板
+            document.getElementById('postcardSettings').style.display = isPostcard ? 'block' : 'none';
+
+            // 日历相关设置面板（在明信片模式下隐藏部分设置）
+            const calendarOnlySettings = document.querySelectorAll('.calendar-only-setting');
+            calendarOnlySettings.forEach(s => s.style.display = isPostcard ? 'none' : '');
+
+            const card = document.getElementById('calendarCard');
+
+            if (isPostcard) {
+                card.classList.add('postcard-mode', 'postcard-mixed');
+                // 重置明信片视图按钮状态 - 默认选中图文混排
+                document.querySelectorAll('#postcardSettings .pill-btn').forEach(e => e.classList.remove('active'));
+                document.querySelector('#postcardSettings .pill-btn[data-postcard="mixed"]').classList.add('active');
+                // 显示图文混排视图
+                document.getElementById('postcardFrontMixed').style.display = 'flex';
+                document.getElementById('postcardBack').style.display = 'none';
+                // 同步图片到图文混排区域
+                syncImageToMixedView();
+                // 切换到 3:2 横版
+                switchToPostcardRatio();
+            } else {
+                card.classList.remove('postcard-mode', 'postcard-front', 'postcard-mixed', 'postcard-back-view');
+                document.getElementById('postcardFrontMixed').style.display = 'none';
+                document.getElementById('postcardBack').style.display = 'none';
+                if (isWeek) {
+                    const year = parseInt(document.getElementById('year').value);
+                    const month = parseInt(document.getElementById('month').value);
+                    updateWeekOptions(year, month);
+                }
+                updateCalendar();
             }
-            updateCalendar();
+        }
+
+        function changePostcardView(el) {
+            document.querySelectorAll('#postcardSettings .pill-btn').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+
+            const view = el.dataset.postcard;
+            const card = document.getElementById('calendarCard');
+            const postcardFrontMixed = document.getElementById('postcardFrontMixed');
+            const postcardBack = document.getElementById('postcardBack');
+            const postcardClassic = document.getElementById('postcardClassic');
+            const postcardBlank = document.getElementById('postcardBlank');
+
+            card.classList.remove('postcard-front', 'postcard-mixed', 'postcard-back-view');
+            postcardFrontMixed.style.display = 'none';
+            postcardBack.style.display = 'none';
+
+            if (view === 'mixed') {
+                card.classList.add('postcard-mixed');
+                postcardFrontMixed.style.display = 'flex';
+                syncImageToMixedView();
+            } else if (view === 'front') {
+                card.classList.add('postcard-front');
+            } else {
+                card.classList.add('postcard-back-view');
+                postcardBack.style.display = 'flex';
+                if (view === 'classic') {
+                    postcardClassic.style.display = 'flex';
+                    postcardBlank.style.display = 'none';
+                } else {
+                    postcardClassic.style.display = 'none';
+                    postcardBlank.style.display = 'block';
+                }
+            }
+        }
+
+        function switchToPostcardRatio() {
+            // 切换到 3:2 横版（明信片标准比例）
+            currentOrientation = 'horizontal';
+            cardWidth = 600;
+            cardHeight = 400; // 3:2 = 600:400
+
+            const card = document.getElementById('calendarCard');
+            card.classList.remove('horizontal', 'vertical');
+            card.classList.add('horizontal');
+
+            applyCardSize();
+            syncSizeInputs();
+            autoFitPreview();
+        }
+
+        // 图文混排区域的图片状态
+        let mixedImgScale = 1, mixedImgOffsetX = 0, mixedImgOffsetY = 0;
+        let mixedIsDragging = false, mixedStartX = 0, mixedStartY = 0, mixedStartOffsetX = 0, mixedStartOffsetY = 0;
+
+        // 同步图片到图文混排视图
+        function syncImageToMixedView() {
+            const imageHalf = document.getElementById('postcardImageHalf');
+            if (currentImageSrc) {
+                imageHalf.innerHTML = `<img src="${currentImageSrc}" alt="明信片图片" draggable="false" style="position:absolute;top:50%;left:50%;transform:translate(calc(-50% + ${mixedImgOffsetX}px), calc(-50% + ${mixedImgOffsetY}px)) scale(${mixedImgScale});max-width:none;pointer-events:none;">`;
+                imageHalf.classList.add('has-image');
+                setupMixedImageDrag(imageHalf);
+            } else {
+                imageHalf.innerHTML = `
+                    <div class="placeholder">
+                        <div class="icon">🖼️</div>
+                        <div>点击或拖拽上传图片</div>
+                    </div>
+                `;
+                imageHalf.classList.remove('has-image');
+                // 设置点击上传功能
+                imageHalf.onclick = triggerMixedImageUpload;
+            }
+            imageHalf.style.cursor = currentImageSrc ? 'move' : 'pointer';
+            // 设置拖放上传功能
+            setupMixedImageDropZone(imageHalf);
+        }
+
+        // 为图文混排区域设置拖放上传
+        function setupMixedImageDropZone(container) {
+            container.ondragover = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.add('drag-over');
+            };
+            container.ondragleave = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.remove('drag-over');
+            };
+            container.ondrop = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.remove('drag-over');
+                if (e.dataTransfer.files.length && e.dataTransfer.files[0].type.startsWith('image/')) {
+                    handleMixedImageFile(e.dataTransfer.files[0]);
+                }
+            };
+        }
+
+        // 处理图文混排区域的图片文件
+        function handleMixedImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentImageSrc = ev.target.result;
+                // 重置图文混排图片位置
+                mixedImgScale = 1;
+                mixedImgOffsetX = 0;
+                mixedImgOffsetY = 0;
+                // 更新图文混排区域
+                syncImageToMixedView();
+                // 同时更新主图片区域
+                const img = new Image();
+                img.onload = () => {
+                    originalImageSize = { width: img.naturalWidth, height: img.naturalHeight };
+                    updateImageSection();
+                };
+                img.src = currentImageSrc;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 触发主图片区域的图片上传（用于明信片正面·纯图模式）
+        function triggerImageUpload() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        currentImageSrc = ev.target.result;
+                        // 重置图片位置
+                        imgScale = 1;
+                        imgOffsetX = 0;
+                        imgOffsetY = 0;
+                        // 更新主图片区域
+                        const img = new Image();
+                        img.onload = () => {
+                            originalImageSize = { width: img.naturalWidth, height: img.naturalHeight };
+                            changePosition(document.querySelector('#positionGroup .pill-btn.active') || document.querySelector('#positionGroup .pill-btn[data-pos="bottom"]'));
+                        };
+                        img.src = currentImageSrc;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function triggerMixedImageUpload() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        currentImageSrc = ev.target.result;
+                        // 重置图文混排图片位置
+                        mixedImgScale = 1;
+                        mixedImgOffsetX = 0;
+                        mixedImgOffsetY = 0;
+                        // 更新图文混排区域
+                        syncImageToMixedView();
+                        // 同时更新主图片区域
+                        const img = new Image();
+                        img.onload = () => {
+                            originalImageSize = { width: img.naturalWidth, height: img.naturalHeight };
+                            updateImageSection();
+                        };
+                        img.src = currentImageSrc;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function setupMixedImageDrag(container) {
+            // 移除旧事件
+            container.onmousedown = null;
+            container.onwheel = null;
+            container.onclick = null;
+            container.ondblclick = null;
+
+            // 双击更换图片
+            container.ondblclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                triggerMixedImageUpload();
+            };
+
+            // 拖拽移动
+            container.onmousedown = (e) => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                mixedIsDragging = true;
+                mixedStartX = e.clientX;
+                mixedStartY = e.clientY;
+                mixedStartOffsetX = mixedImgOffsetX;
+                mixedStartOffsetY = mixedImgOffsetY;
+                container.style.cursor = 'grabbing';
+            };
+
+            // 滚轮缩放
+            container.onwheel = (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                mixedImgScale = Math.max(0.5, Math.min(3, mixedImgScale + delta));
+                updateMixedImageTransform();
+            };
+        }
+
+        function updateMixedImageTransform() {
+            const img = document.querySelector('#postcardImageHalf img');
+            if (img) {
+                img.style.transform = `translate(calc(-50% + ${mixedImgOffsetX}px), calc(-50% + ${mixedImgOffsetY}px)) scale(${mixedImgScale})`;
+            }
+        }
+
+        // 全局鼠标移动和松开事件（用于图文混排拖拽）
+        document.addEventListener('mousemove', (e) => {
+            if (mixedIsDragging) {
+                const dx = e.clientX - mixedStartX;
+                const dy = e.clientY - mixedStartY;
+                mixedImgOffsetX = mixedStartOffsetX + dx;
+                mixedImgOffsetY = mixedStartOffsetY + dy;
+                updateMixedImageTransform();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (mixedIsDragging) {
+                mixedIsDragging = false;
+                const container = document.getElementById('postcardImageHalf');
+                if (container) container.style.cursor = 'move';
+            }
+        });
+
+        // 更新主图片区域（供图文混排上传后同步）
+        function updateImageSection() {
+            const section = document.getElementById('imageSection');
+            if (currentImageSrc) {
+                section.innerHTML = `<img src="${currentImageSrc}" style="position:absolute;top:50%;left:50%;transform:translate(calc(-50% + ${imgOffsetX}px), calc(-50% + ${imgOffsetY}px)) scale(${imgScale});max-width:none;">`;
+                section.classList.add('has-image');
+            }
         }
 
         let originalImageSize = { width: 0, height: 0 };
@@ -3365,6 +4030,12 @@
             fontSizeMultiplier = (parseInt(s.fontSize) || 100) / 100;
 
             document.getElementById('sizeUnit').value = sizeUnit;
+            // 更新单位显示文字
+            const unitText = sizeUnit === 'cm' ? 'cm (印刷)' : 'px (线上)';
+            document.getElementById('unitSelectText').textContent = unitText;
+            document.getElementById('unitSelectDropdown').querySelectorAll('.custom-select-option').forEach(o => {
+                o.classList.toggle('selected', o.dataset.value === sizeUnit);
+            });
             syncSizeInputs();
 
             const card = document.getElementById('calendarCard');
@@ -3615,6 +4286,10 @@
 
         function updateCalendar() {
             const type = document.querySelector('.nav-tab.active').dataset.type;
+
+            // 明信片模式下不更新日历
+            if (type === 'postcard') return;
+
             const year = parseInt(document.getElementById('year').value);
             const month = parseInt(document.getElementById('month').value);
 
