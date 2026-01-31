@@ -1564,6 +1564,21 @@
             display: none !important;
         }
 
+        /* 竖版明信片图文模式 - 上下排版 */
+        .calendar-card.vertical.postcard-mode.postcard-mixed .postcard-front-mixed {
+            flex-direction: column;
+        }
+
+        .calendar-card.vertical.postcard-mode .postcard-image-half {
+            width: 100%;
+            height: 55%;
+        }
+
+        .calendar-card.vertical.postcard-mode .postcard-info-half {
+            width: 100%;
+            height: 45%;
+        }
+
         /* 明信片正面·纯图模式 */
         .calendar-card.postcard-mode.postcard-front .image-section {
             display: block !important;
